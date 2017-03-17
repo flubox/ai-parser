@@ -1,0 +1,27 @@
+{
+  "name": "ai-parser",
+  "version": "1.0.0",
+  "description": "",
+  "main": "test.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/flubox/ai-parser.git"
+  },
+  "author": "François Lunette",
+  "bugs": {
+    "url": "https://github.com/flubox/ai-parser/issues"
+  },
+  "homepage": "https://github.com/flubox/ai-parser#readme",
+  "dependencies": {
+    "aisvg2sprite": "^1.0.0",
+    "base64-img": "^1.0.3",
+    "command-line-args": "^4.0.2",
+    "pdf2json": "^1.1.7",
+    "pdfreader": "^0.1.4",
+    "xml-js": "^1.0.2",
+    "xmp-reader": "0.0.3"
+  }
+}
