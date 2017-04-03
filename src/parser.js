@@ -3,7 +3,7 @@ import { getColorsFromRects } from './colors';
 // import { getColorsFromGroups as getColorsFromGroupsUsingLegacy } from './legacy/colors';
 import { getFontsFromGroups } from './fonts';
 import { parseImagesFromSVG } from './images';
-import { ACL, Bucket, getLocation, getBase64SvgUploadOptions, mkUrl } from './upload';
+import { ACL, Bucket, getLocation, getSvgUploadOptions, mkUrl } from './upload';
 
 export const merge = (a, b) => ({...a, ...b });
 
@@ -33,31 +33,20 @@ export const checkMode = groups => {
 export const nodeList2Array = nodeList => [].slice.call(nodeList);
 
 export const parser = svg => options => {
-    const { filename, endpoints, S3 } = options;
-    // S3.getBucketCors({ Bucket: 'import' }, (err, data) => {
-    //     console.info('...', 'err', err, 'data', data);
-    // });
-    // S3.listObjects({ Bucket }, (err, data) => {
-    //     console.info('...', 'err', err, 'data', data);
-    // });
+    const { filename, endpoints, S3, hashFunction } = options;
     const groups = nodeList2Array(svg.querySelectorAll('g'));
     const mode = checkMode(groups);
     const colorsGroup = nodeList2Array(svg.querySelectorAll('rect[id*="color"]'));
     const fontsGroup = nodeList2Array(svg.querySelectorAll('g[id="fonts"] text'));
     const imagesGroup = nodeList2Array(svg.querySelectorAll('[id="images"] [id="image"]'));
-    // console.info('###', 'groups', groups);
-    const urlThumb = S3.upload(getBase64SvgUploadOptions(`${filename}/${filename.replace('.svg', '.thumb.svg')}`)(svg.outerHTML)).promise().then(data => {
-        return data.Location;
-    });
-    console.info('...', 'urlThumb', urlThumb);
-    const data = {
-        urlThumb,
-        title: svg.querySelector('title').textContent,
-        colors: getColorsFromRects(colorsGroup),
-        fonts: getFontsFromGroups(fontsGroup),
-        images: parseImagesFromSVG(filename)(svg)(S3),
-    };
-    return data;
+    const urlThumbPath = `${filename}/${filename.replace('.svg', '.thumb.svg')}`;
+    return Promise.all([
+        new Promise((resolve, reject) => S3.upload(getSvgUploadOptions(urlThumbPath)(svg.outerHTML)).promise().then(getLocation).then(urlThumb => resolve({ urlThumb }))),
+        Promise.resolve({ title: svg.querySelector('title').textContent }),
+        Promise.resolve({ colors: getColorsFromRects(colorsGroup)(hashFunction) }),
+        Promise.resolve({ fonts: getFontsFromGroups(fontsGroup)(hashFunction) }),
+        new Promise((resolve, reject) => parseImagesFromSVG(filename)(svg)(S3)(hashFunction).then(images => resolve({ images }))),
+    ]).then(values => values.reduce(merge, {}));
 };
 
 export default parser;

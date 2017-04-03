@@ -10,13 +10,15 @@ export const getName = rawFontData => Array.isArray(rawFontData) ? rawFontData[1
 
 export const getDisplayName = rawFontData => Array.isArray(rawFontData) ? rawFontData[1] : getDisplayName(rawFontData.split(',').map(a => a.trim()));
 
-export const getFontsFromGroups = texts => {
+export const getFontsFromGroups = texts => hashFunction => {
+    const useHashFunction = typeof hashFunction === 'function';
     return texts.map(text => {
-        const rawFontTypeDeclaration = getFontTypeDeclaration(text);
-        return {
-            name: getName(rawFontTypeDeclaration),
-            displayName: getDisplayName(rawFontTypeDeclaration),
-            fontName: getFontName(rawFontTypeDeclaration)
-        };
-    });
+            const rawFontTypeDeclaration = getFontTypeDeclaration(text);
+            return {
+                name: getName(rawFontTypeDeclaration),
+                displayName: getDisplayName(rawFontTypeDeclaration),
+                fontName: getFontName(rawFontTypeDeclaration)
+            };
+        })
+        .map(font => useHashFunction ? {...font, hash: hashFunction(JSON.stringify(font)) } : font);
 };

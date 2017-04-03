@@ -26,14 +26,14 @@ export const getColorTypeDeclaration = ({ id }) => {
 
 export const filterColorPrefix = color => color !== 'color';
 
-export const getColorsFromRects = rects => {
+export const getColorsFromRects = rects => hashFunction => {
+    const useHashFunction = typeof hashFunction === 'function';
     return nodeList2Array(rects).map(rect => {
             const reduce = (a, b) => a.concat(b);
             const colorType = getColorTypeDeclaration(rect).filter(a => a.length);
             const rgb = getRgb(getRectFillColor(rect));
-            const result = { colorType, rgb };
-            console.info('...', rect, result, colorType, rgb);
-            return result;
+            return { colorType, rgb };
         })
-        .reduce((a, b) => a.concat(b.colorType.length ? b.colorType.map(colorType => ({...b, colorType })) : b), []);
+        .reduce((a, b) => a.concat(b.colorType.length ? b.colorType.map(colorType => ({...b, colorType })) : b), [])
+        .map(color => useHashFunction ? { hash: hashFunction(JSON.stringify(color)), ...color } : color);
 };
