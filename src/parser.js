@@ -7,18 +7,16 @@ import { ACL, Bucket, getLocation, getSvgUploadOptions, mkUrl } from './upload';
 
 export const merge = (a, b) => ({...a, ...b });
 
+export const filterGroupById = token => g => typeof g.id !== 'undefined' && g.id.indexOf(token) === 0;
+
+export const getDeclaration = element => attribute => element.getAttribute(attribute);
+
 export const capitalizeFirstLetter = string => `${string.toUpperCase().substr(0, 1)}${string.toLowerCase().substr(1)}`;
 
-export const extractData = mode => {}
-
-export const groupsWalk = groups => mode => groups.map(extractData(mode));
-
-export const legacyColorDeclaration = id => id.match(/COLOR_([\w]+)_([\d]+)/);
-export const legacyClipartDeclaration = id => id.match(/CLIPART_([\w]+)_([\d]+)/);
+export const legacyColorDeclaration = id => id.match(/COLOR_([\w]+)_([\d]+)?/i);
+export const legacyClipartDeclaration = id => id.match(/CLIPART_([\d]+)?/i);
 
 export const getGroupsWithId = groups => groups.filter(g => g.id);
-
-export const isLegacyMode = mode => mode === 'legacy';
 
 export const checkMode = groups => {
     const groupsWithId = getGroupsWithId(groups);

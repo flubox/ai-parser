@@ -1,15 +1,15 @@
-import { capitalizeFirstLetter, getGroupsWithId, nodeList2Array } from './parser';
+import { capitalizeFirstLetter, filterGroupById, getDeclaration, getGroupsWithId, nodeList2Array } from './parser';
 import convertCssColorNameToHex from 'convert-css-color-name-to-hex';
 
-export const filterColorById = g => typeof g.id !== 'undefined' && g.id.indexOf('color') === 0;
-
-export const getShortRgbValue = rawRgbValue => rawRgbValue.length < 6 ? rawRgbValue.split('').map(composant => `${composant}${composant}`).join('') : rawRgbValue;
+export const filterColorById = g => filterGroupById('color')(g);
 
 export const getRgb = color => color.indexOf('#') === 0 ? color.replace(/#/g, '') : getRgb(convertCssColorNameToHex(color));
 
-export const getRectFillColor = rect => rect.getAttribute('fill');
+// export const getRectFillColor = rect => rect.getAttribute('fill');
+export const getRectFillColor = rect => getDeclaration(rect)('fill');
+// rect => rect.getAttribute('fill');
 
-export const parseColorType = explicitColorDeclaration => explicitColorDeclaration.indexOf(':') > 0 ? explicitColorDeclaration.split(':').slice(1) : explicitColorDeclaration;
+export const parseColorType = explicitColorDeclaration => explicitColorDeclaration.indexOf(':') > 0 ? explicitColorDeclaration.split(':').slice(1)[0] : explicitColorDeclaration;
 
 export const getRgbFromColorPicker = group => {
     const colorPicker = group.querySelector('[fill]');
@@ -21,7 +21,7 @@ export const getColorTypeDeclaration = ({ id }) => {
     if (id.indexOf(':') > -1) {
         return getColorTypeDeclaration({ id: id.split(':')[1] });
     }
-    return id.split('_').map(a => a.trim());
+    return id.split('_').map(a => a.trim()).filter(a => a.length);
 };
 
 export const filterColorPrefix = color => color !== 'color';
@@ -30,7 +30,7 @@ export const getColorsFromRects = rects => hashFunction => {
     const useHashFunction = typeof hashFunction === 'function';
     return nodeList2Array(rects).map(rect => {
             const reduce = (a, b) => a.concat(b);
-            const colorType = getColorTypeDeclaration(rect).filter(a => a.length);
+            const colorType = getColorTypeDeclaration(rect).filter(a => a.length).map(capitalizeFirstLetter);
             const rgb = getRgb(getRectFillColor(rect));
             return { colorType, rgb };
         })
