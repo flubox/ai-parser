@@ -2,7 +2,7 @@
   "name": "ai-parser",
   "version": "1.0.0",
   "description": "",
-  "main": "test.js",
+  "main": "dist/parser.js",
   "author": "François Lunette",
   "scripts": {
     "dev": "npm run dev:server && npm run dev:parser",
