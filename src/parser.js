@@ -1,6 +1,5 @@
 import convert from 'xml-js';
 import { getColorsFromRects } from './colors';
-// import { getColorsFromGroups as getColorsFromGroupsUsingLegacy } from './legacy/colors';
 import { getFontsFromGroups } from './fonts';
 import { parseImagesFromSVG } from './images';
 import { ACL, Bucket, getLocation, getSvgUploadOptions, mkUrl } from './upload';
@@ -31,7 +30,7 @@ export const checkMode = groups => {
 export const nodeList2Array = nodeList => [].slice.call(nodeList);
 
 export const parser = svg => options => {
-    const { filename, endpoints, upload, hashFunction } = options;
+    const { filename, upload, hashFunction } = options;
     const groups = nodeList2Array(svg.querySelectorAll('g'));
     const mode = checkMode(groups);
     const colorsGroup = nodeList2Array(svg.querySelectorAll('rect[id*="color"]'));
