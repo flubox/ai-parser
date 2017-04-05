@@ -5,6 +5,8 @@
   "main": "dist/parser.js",
   "author": "François Lunette",
   "scripts": {
+    "install": "npm run dist",
+    "dist": "webpack",
     "dev": "npm run dev:server && npm run dev:parser",
     "cli": "node dist/cli.js",
     "dev:parser": "webpack --watch",
