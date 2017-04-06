@@ -84,7 +84,13 @@ window.svgParserClient = domElement => endpoints => {
 
                         titleForArray('images')(panelEl);
                         Array2Dom('images')(parsed.images)(panelEl)((el, i, each, tmpEl) => {
-                            console.info('###', 'el', el);
+                            if (el.classList.value.indexOf('urlSvg') > -1) {
+                                const tmpAnchor = document.createElement('a');
+                                tmpAnchor.setAttribute('href', el.textContent.split(':').slice(1).join(':'));
+                                tmpAnchor.setAttribute('target', '_blank');
+                                tmpAnchor.innerHTML = el.outerHTML;
+                                return tmpAnchor;
+                            }
                             if (each.urlSvg) {
                                 if (!tmpEl.querySelector('embed')) {
                                     const tmpPreview = document.createElement('embed');
