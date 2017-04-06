@@ -26,7 +26,7 @@ window.svgParserClient = domElement => endpoints => {
                     document.querySelector(domElement).appendChild(loader);
                     document.querySelector(`#${loaderId}`).appendChild(info);
                     const S3 = new AWS.S3();
-                    const options = { filename: file.name, upload: S3.upload, hashFunction: md5 };
+                    const options = { filename: file.name, S3, hashFunction: md5 };
 
                     const titleForArray = text => dom2link => {
                         const tmpEl = document.createElement('h3');
@@ -41,6 +41,8 @@ window.svgParserClient = domElement => endpoints => {
 
                             Object.keys(each).forEach(k => {
                                 const lineEl = document.createElement('div');
+                                lineEl.setAttribute('id', `${name}-${i}-${k}`);
+                                lineEl.setAttribute('class', `${name} ${k}`);
                                 lineEl.textContent = `${k} : ${each[k]}`;
                                 tmpEl.appendChild(forEach(lineEl, i, each, tmpEl));
                             });
@@ -82,6 +84,7 @@ window.svgParserClient = domElement => endpoints => {
 
                         titleForArray('images')(panelEl);
                         Array2Dom('images')(parsed.images)(panelEl)((el, i, each, tmpEl) => {
+                            console.info('###', 'el', el);
                             if (each.urlSvg) {
                                 if (!tmpEl.querySelector('embed')) {
                                     const tmpPreview = document.createElement('embed');

@@ -30,7 +30,7 @@ export const checkMode = groups => {
 export const nodeList2Array = nodeList => [].slice.call(nodeList);
 
 export const parser = svg => options => {
-    const { filename, upload, hashFunction } = options;
+    const { filename, S3, hashFunction } = options;
     const groups = nodeList2Array(svg.querySelectorAll('g'));
     const mode = checkMode(groups);
     const colorsGroup = nodeList2Array(svg.querySelectorAll('rect[id*="color"]'));
@@ -38,11 +38,11 @@ export const parser = svg => options => {
     const imagesGroup = nodeList2Array(svg.querySelectorAll('[id="images"] [id="image"]'));
     const urlThumbPath = `${filename}/${filename.replace('.svg', '.thumb.svg')}`;
     return Promise.all([
-        new Promise((resolve, reject) => upload(getSvgUploadOptions(urlThumbPath)(svg.outerHTML)).promise().then(getLocation).then(urlThumb => resolve({ urlThumb }))),
+        new Promise((resolve, reject) => S3.upload(getSvgUploadOptions(urlThumbPath)(svg.outerHTML)).promise().then(getLocation).then(urlThumb => resolve({ urlThumb }))),
         Promise.resolve({ title: svg.querySelector('title').textContent }),
         Promise.resolve({ colors: getColorsFromRects(colorsGroup)(hashFunction) }),
         Promise.resolve({ fonts: getFontsFromGroups(fontsGroup)(hashFunction) }),
-        new Promise((resolve, reject) => parseImagesFromSVG(filename)(svg)(upload)(hashFunction).then(images => resolve({ images }))),
+        new Promise((resolve, reject) => parseImagesFromSVG(filename)(svg)(S3)(hashFunction).then(images => resolve({ images }))),
     ]).then(values => values.reduce(merge, {}));
 };
 
