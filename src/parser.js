@@ -30,7 +30,7 @@ export const checkMode = groups => {
 export const nodeList2Array = nodeList => [].slice.call(nodeList);
 
 export const parser = svg => options => {
-    const { filename, S3, hashFunction } = options;
+    const { filename, S3, hashFunction, hashMethod } = options;
     const groups = nodeList2Array(svg.querySelectorAll('g'));
     const mode = checkMode(groups);
     const colorsGroup = nodeList2Array(svg.querySelectorAll('rect[id*="color"]'));
@@ -40,9 +40,9 @@ export const parser = svg => options => {
     return Promise.all([
         new Promise((resolve, reject) => S3.upload(getSvgUploadOptions(urlThumbPath)(svg.outerHTML)).promise().then(getLocation).then(urlThumb => resolve({ urlThumb }))),
         Promise.resolve({ title: svg.querySelector('title').textContent }),
-        Promise.resolve({ colors: getColorsFromRects(colorsGroup)(hashFunction) }),
-        Promise.resolve({ fonts: getFontsFromGroups(fontsGroup)(hashFunction) }),
-        new Promise((resolve, reject) => parseImagesFromSVG(filename)(svg)(S3)(hashFunction).then(images => resolve({ images }))),
+        Promise.resolve({ colors: getColorsFromRects(colorsGroup)({hashFunction, hashMethod}) }),
+        Promise.resolve({ fonts: getFontsFromGroups(fontsGroup)({hashFunction, hashMethod}) }),
+        new Promise((resolve, reject) => parseImagesFromSVG(filename)(svg)(S3)({hashFunction, hashMethod}).then(images => resolve({ images }))),
     ]).then(values => values.reduce(merge, {}));
 };
 

@@ -26,7 +26,7 @@ export const getColorTypeDeclaration = ({ id }) => {
 
 export const filterColorPrefix = color => color !== 'color';
 
-export const getColorsFromRects = rects => hashFunction => {
+export const getColorsFromRects = rects => ({hashFunction, hashMethod}) => {
     const useHashFunction = typeof hashFunction === 'function';
     return nodeList2Array(rects).map(rect => {
             const reduce = (a, b) => a.concat(b);
@@ -35,5 +35,5 @@ export const getColorsFromRects = rects => hashFunction => {
             return { colorType, rgb };
         })
         .reduce((a, b) => a.concat(b.colorType.length ? b.colorType.map(colorType => ({...b, colorType })) : b), [])
-        .map(color => useHashFunction ? { hash: hashFunction(JSON.stringify(color)), ...color } : color);
+        .map(color => useHashFunction ? { hash: hashMethod, [hashMethod]: hashFunction(JSON.stringify(color)), ...color } : color);
 };

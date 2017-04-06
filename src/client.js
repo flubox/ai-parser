@@ -26,7 +26,7 @@ window.svgParserClient = domElement => endpoints => {
                     document.querySelector(domElement).appendChild(loader);
                     document.querySelector(`#${loaderId}`).appendChild(info);
                     const S3 = new AWS.S3();
-                    const options = { filename: file.name, S3, hashFunction: md5 };
+                    const options = { filename: file.name, S3, hashFunction: md5, hashMethod: 'md5' };
 
                     const titleForArray = text => dom2link => {
                         const tmpEl = document.createElement('h3');

@@ -24,10 +24,10 @@ export const getS3Filepath = filename => image => image && image.id ? `${filenam
 
 export const getSvgThumbnails = filename => image => S3 => uploadSvg(getS3Filepath(filename)(image))(svgAsString(makeSvg(image)))(S3).promise();
 
-export const parseImagesFromSVG = filename => svg => S3 => hashFunction => {
+export const parseImagesFromSVG = filename => svg => S3 => ({hashFunction, hashMethod}) => {
     const useHashFunction = typeof hashFunction === 'function';
     const imagesGroup = nodeList2Array(svg.querySelectorAll('g[id="images"] [id*="image"]'));
-    const resolveWithHash = data => image => useHashFunction ? {...data, hash: hashFunction(image.getAttribute('xlink:href'))} : data;
+    const resolveWithHash = data => image => useHashFunction ? {...data, hash: hashMethod, [hashMethod]: hashFunction(image.getAttribute('xlink:href'))} : data;
     return Promise.all(imagesGroup.map(image => getSvgThumbnails(filename)(image)(S3)
         .then(data => resolveWithHash(getSvgUrl({ imageType: getImageType(image) })(data))(image))
     ));
