@@ -79,6 +79,7 @@ window.svgParserClient = domElement => endpoints => {
                         titleForArray('fonts')(panelEl);
                         Array2Dom('fonts')(parsed.fonts)(panelEl)((el, i) => {
                             el.style.fontFamily = parsed.fonts[i].fontName;
+                            el.style.fontSize = '1.5em';
                             return el;
                         });
 
