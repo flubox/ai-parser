@@ -2,9 +2,7 @@ import { capitalizeFirstLetter, filterGroupById, getDeclaration, nodeList2Array 
 
 export const filterFontsById = g => filterGroupById('fonts')(g);
 
-// export const getFontTypeDeclaration = text => text.getAttribute('font-family').split(',');
 export const getFontTypeDeclaration = text => getDeclaration(text)('font-family').split(',');
-//  text => text.getAttribute('font-family').split(',');
 
 export const getFontName = rawFontData => Array.isArray(rawFontData) ? rawFontData[0].trim() : getFontName(rawFontData.split(',').map(a => a.trim()));
 

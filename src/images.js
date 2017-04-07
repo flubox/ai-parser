@@ -18,7 +18,7 @@ export const svgAsString = svg => svg.outerHTML;
 
 export const uploadSvg = filename => Body => S3 => S3.upload(getSvgUploadOptions(filename)(Body));
 
-export const getSvgUrl = previous => data => ({...previous, urlSvg: getLocation(data) });
+export const getSvgUrl = previous => data => ({...previous, urlSvg: getLocation(data), urlThumb: getLocation(data), urlScaled: getLocation(data), urlFull: getLocation(data) });
 
 export const getS3Filepath = filename => image => image && image.id ? `${filename}/${image.id.match(/([a-z0-9])*/gi).join('_')}.svg` : filename;
 
