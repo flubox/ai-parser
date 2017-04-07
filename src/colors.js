@@ -5,9 +5,7 @@ export const filterColorById = g => filterGroupById('color')(g);
 
 export const getRgb = color => color.indexOf('#') === 0 ? color.replace(/#/g, '') : getRgb(convertCssColorNameToHex(color));
 
-// export const getRectFillColor = rect => rect.getAttribute('fill');
 export const getRectFillColor = rect => getDeclaration(rect)('fill');
-// rect => rect.getAttribute('fill');
 
 export const parseColorType = explicitColorDeclaration => explicitColorDeclaration.indexOf(':') > 0 ? explicitColorDeclaration.split(':').slice(1)[0] : explicitColorDeclaration;
 
