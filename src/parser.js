@@ -61,12 +61,15 @@ export const parser = svg => options => {
     const { filename, S3, hashFunction, hashMethod } = options;
 
     return Promise.all([
-        parse.toolkit(svg)(options),
-        parse.designs(svg)(options)
-    ])
-    .then(values => values.reduce(merge, {}))
-    ;
-
+        new Promise((resolve, reject) => S3.upload(getSvgUploadOptions(urlThumbPath)(svg.outerHTML)).promise().then(getLocation).then(urlThumb => resolve({ urlThumb }))),
+        Promise.resolve({ colors: getColorsFromRects(colorsGroup)({hashFunction, hashMethod}) }),
+        Promise.resolve({ fonts: getFontsFromGroups(fontsGroup)({hashFunction, hashMethod}) }),
+        new Promise((resolve, reject) => parseImagesFromSVG(filename)(svg)(S3)({hashFunction, hashMethod}).then(images => resolve({ images }))),
+    ]).then(values => values.reduce(merge,
+    {
+        id: undefined,
+        title: svg.querySelector('title').textContent
+    }));
 };
 
 export default parser;
