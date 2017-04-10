@@ -67,7 +67,7 @@ export const parser = svg => options => {
         new Promise((resolve, reject) => parseImagesFromSVG(filename)(svg)(S3)({hashFunction, hashMethod}).then(images => resolve({ images }))),
     ]).then(values => values.reduce(merge,
     {
-        id: undefined,
+        id: filename,
         title: svg.querySelector('title').textContent
     }));
 };
