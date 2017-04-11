@@ -28,10 +28,8 @@ export const checkMode = groups => {
 };
 
 export const checkContent = svg => {
-    console.info('...', 'checkContent', typeof svg);
     const toolkit = !!svg.querySelectorAll('g#toolkit').length;
     const designs = !!svg.querySelectorAll('g#designs').length;
-    console.info('...', 'checkContent', {toolkit, designs});
     return {toolkit, designs};
 };
 
