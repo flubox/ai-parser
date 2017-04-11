@@ -1,4 +1,4 @@
-import { capitalizeFirstLetter, nodeList2Array } from './parser';
+import { capitalizeFirstLetter, nodeList2Array } from './helper';
 import { ACL, Bucket, getLocation, getSvgUploadOptions } from './upload';
 
 export const getImageType = image => capitalizeFirstLetter(image.id.split(':').reverse()[0].split('-')[0]);
