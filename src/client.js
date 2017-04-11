@@ -24,7 +24,6 @@ window.svgParserClient = domElement => endpoints => {
                     let png;
                     const svg = target.result;
                     loader.innerHTML = svg;
-                    // loader
                     document.querySelector(domElement).appendChild(loader);
                     document.querySelector(`#${loaderId}`).appendChild(info);
                     const S3 = new AWS.S3();
@@ -65,7 +64,7 @@ window.svgParserClient = domElement => endpoints => {
                             const panelEl = document.createElement('div');
                             panelEl.setAttribute('class', 'mui-panel');
                             const titleEl = document.createElement('h2');
-                            titleEl.textContent = toolkit.title;
+                            titleEl.textContent = `toolkit: ${toolkit.id}`;
                             panelEl.appendChild(titleEl);
 
                             titleForArray('colors')(panelEl);
@@ -118,16 +117,20 @@ window.svgParserClient = domElement => endpoints => {
                         },
                         designs: designs => {
 
+                        },
+                        errors: error => {
+                            console.error(error);
                         }
                     }
 
                     parser(document.querySelector(`#${loaderId} svg`))(options).then(parsed => {
                         console.info('###', 'parsed', parsed);
-                        Object.keys(parsed).map(key => onParsed[key](parsed[key]));
+                        Object.keys(parsed).filter(a => {
+                            return Array.isArray(parsed[a]) ? !!parsed[a].length : !!Object.keys(parsed[a]).length;
+                        }).map(key => {
+                            return Array.isArray(parsed[key]) ? parsed[key].map(onParsed[key]) : onParsed[key](parsed[key])
+                        } );
                     });
-                    // parse.toolkit(document.querySelector(`#${loaderId} svg`))(options).then(onParsed.toolkit);
-
-
                 };
             })(file);
         });
