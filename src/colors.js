@@ -1,4 +1,5 @@
-import { capitalizeFirstLetter, filterGroupById, getDeclaration, getGroupsWithId, nodeList2Array } from './parser';
+import { capitalizeFirstLetter, nodeList2Array } from './helper';
+import { getDeclaration, filterGroupById, getGroupsWithId } from './group';
 import convertCssColorNameToHex from 'convert-css-color-name-to-hex';
 
 export const filterColorById = g => filterGroupById('color')(g);
@@ -28,7 +29,9 @@ export const getColorsFromRects = rects => ({hashFunction, hashMethod}) => {
     const useHashFunction = typeof hashFunction === 'function';
     return nodeList2Array(rects).map(rect => {
             const reduce = (a, b) => a.concat(b);
-            const colorType = getColorTypeDeclaration(rect).filter(a => a.length).map(capitalizeFirstLetter);
+            const colorType = getColorTypeDeclaration(rect).filter(a => a.length).map(a => {
+                return a.toLowerCase() === 'coverbackground' ? 'CoverBackground' : capitalizeFirstLetter(a);
+            });
             const rgb = getRgb(getRectFillColor(rect));
             return { colorType, rgb };
         })

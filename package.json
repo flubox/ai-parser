@@ -7,11 +7,9 @@
   "scripts": {
     "install": "npm run dist",
     "dist": "webpack",
-    "dev": "npm run dev:server && npm run dev:parser",
+    "dev": "npm run dev:client && npm run dev:parser",
     "cli": "node dist/cli.js",
     "dev:parser": "webpack --watch",
-    "start:server": "node dist/server.js",
-    "dev:server": "webpack --config webpack.config.server.js --watch",
     "dev:client": "webpack --config webpack.config.client.js --watch",
     "test": "./node_modules/.bin/ava --verbose",
     "test:auto": "./node_modules/.bin/ava --watch --verbose",

@@ -1,4 +1,4 @@
-import { capitalizeFirstLetter, nodeList2Array } from './parser';
+import { capitalizeFirstLetter, nodeList2Array } from './helper';
 import { ACL, Bucket, getLocation, getSvgUploadOptions } from './upload';
 
 export const getImageType = image => capitalizeFirstLetter(image.id.split(':').reverse()[0].split('-')[0]);
@@ -27,7 +27,7 @@ export const getSvgThumbnails = filename => image => S3 => uploadSvg(getS3Filepa
 export const parseImagesFromSVG = filename => svg => S3 => ({hashFunction, hashMethod}) => {
     const useHashFunction = typeof hashFunction === 'function';
     const imagesGroup = nodeList2Array(svg.querySelectorAll('g[id="images"] [id*="image"]'));
-    const resolveWithHash = data => image => useHashFunction ? {...data, hash: hashMethod, [hashMethod]: hashFunction(image.getAttribute('xlink:href'))} : data;
+    const resolveWithHash = data => image => useHashFunction ? {...data, id: `${filename}-${image.id}`, hash: hashMethod, [hashMethod]: hashFunction(image.getAttribute('xlink:href'))} : data;
     return Promise.all(imagesGroup.map(image => getSvgThumbnails(filename)(image)(S3)
         .then(data => resolveWithHash(getSvgUrl({ imageType: getImageType(image) })(data))(image))
     ));
