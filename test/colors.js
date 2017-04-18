@@ -51,9 +51,9 @@ test('colors.getColorsFromRects', t => {
     t.deepEqual(colors.getColorsFromRects([
         { id: 'color:_background_font', getAttribute: () => '#FF9900' },
         { id: 'color:cover', getAttribute: () => '#00FF99' }
-    ])(md5), [
+    ])({hashMethod: 'md5', hashFunction: md5}), [
         { colorType: 'Background', rgb: 'FF9900' },
         { colorType: 'Font', rgb: 'FF9900' },
         { colorType: 'Cover', rgb: '00FF99' }
-    ].map(each => ({...each, hash: md5(JSON.stringify(each)) })));
+    ].map(each => ({...each, hash: 'md5', md5: md5(JSON.stringify(each)) })));
 });

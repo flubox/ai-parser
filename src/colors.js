@@ -1,13 +1,12 @@
-import { capitalizeFirstLetter, filterGroupById, getDeclaration, getGroupsWithId, nodeList2Array } from './parser';
+import { capitalizeFirstLetter, nodeList2Array } from './helper';
+import { getDeclaration, filterGroupById, getGroupsWithId } from './group';
 import convertCssColorNameToHex from 'convert-css-color-name-to-hex';
 
 export const filterColorById = g => filterGroupById('color')(g);
 
 export const getRgb = color => color.indexOf('#') === 0 ? color.replace(/#/g, '') : getRgb(convertCssColorNameToHex(color));
 
-// export const getRectFillColor = rect => rect.getAttribute('fill');
 export const getRectFillColor = rect => getDeclaration(rect)('fill');
-// rect => rect.getAttribute('fill');
 
 export const parseColorType = explicitColorDeclaration => explicitColorDeclaration.indexOf(':') > 0 ? explicitColorDeclaration.split(':').slice(1)[0] : explicitColorDeclaration;
 
@@ -26,14 +25,16 @@ export const getColorTypeDeclaration = ({ id }) => {
 
 export const filterColorPrefix = color => color !== 'color';
 
-export const getColorsFromRects = rects => hashFunction => {
+export const getColorsFromRects = rects => ({hashFunction, hashMethod}) => {
     const useHashFunction = typeof hashFunction === 'function';
     return nodeList2Array(rects).map(rect => {
             const reduce = (a, b) => a.concat(b);
-            const colorType = getColorTypeDeclaration(rect).filter(a => a.length).map(capitalizeFirstLetter);
+            const colorType = getColorTypeDeclaration(rect).filter(a => a.length).map(a => {
+                return a.toLowerCase() === 'coverbackground' ? 'CoverBackground' : capitalizeFirstLetter(a);
+            });
             const rgb = getRgb(getRectFillColor(rect));
             return { colorType, rgb };
         })
         .reduce((a, b) => a.concat(b.colorType.length ? b.colorType.map(colorType => ({...b, colorType })) : b), [])
-        .map(color => useHashFunction ? { hash: hashFunction(JSON.stringify(color)), ...color } : color);
+        .map(color => useHashFunction ? { hash: hashMethod, [hashMethod]: hashFunction(JSON.stringify(color)), ...color } : color);
 };

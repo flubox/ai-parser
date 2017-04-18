@@ -32,8 +32,8 @@ test('fonts.getFontsFromGroups', t => {
     t.deepEqual(fonts.getFontsFromGroups([
         { id: 'font', getAttribute: () => 'futura-medium,futura' },
         { id: 'font', getAttribute: () => 'Arial,Arial' }
-    ])(md5), [
-        { name: 'Futura', displayName: 'Futura', fontName: 'Futura-medium' },
-        { name: 'Arial', displayName: 'Arial', fontName: 'Arial' }
-    ].map(each => ({...each, hash: md5(JSON.stringify(each)) })));
+    ])({hashMethod: 'md5', hashFunction: md5}), [
+        { displayName: 'Futura', fontName: 'Futura-medium' , id: 'Futura-medium', name: 'Futura'},
+        { displayName: 'Arial', fontName: 'Arial', id: 'Arial', name: 'Arial' }
+    ].map(each => ({...each, hash: 'md5', md5: md5(JSON.stringify(each)) })));
 });
