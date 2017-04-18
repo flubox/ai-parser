@@ -27,7 +27,7 @@ export const parse = {
         const urlThumbPath = `${filename}/${filename.replace('.svg', '.thumb.svg')}`;
         return new Promise((resolve, reject) => {
             Promise.all([
-                new Promise((resolve, reject) => S3.upload(getSvgUploadOptions(urlThumbPath)(svg.outerHTML)).promise().then(getLocation).then(urlThumb => resolve({ urlThumb }))),
+                new Promise((resolve, reject) => S3.upload(getSvgUploadOptions(urlThumbPath)(svg.outerHTML)).promise().then(getLocation).then(thumbUrl => resolve({ thumbUrl }))),
                 Promise.resolve({ id: filename }),
                 Promise.resolve({ colors: getColorsFromRects(colorsGroup)({hashFunction, hashMethod}) }),
                 Promise.resolve({ fonts: getFontsFromGroups(fontsGroup)({hashFunction, hashMethod}) }),

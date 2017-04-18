@@ -15,10 +15,12 @@ export const getFontsFromGroups = texts => ({hashFunction, hashMethod}) => {
     const useHashFunction = typeof hashFunction === 'function';
     return texts.map(text => {
             const rawFontTypeDeclaration = getFontTypeDeclaration(text);
+            const fontName = capitalizeFirstLetter(getFontName(rawFontTypeDeclaration));
             return {
-                name: capitalizeFirstLetter(getName(rawFontTypeDeclaration)),
                 displayName: capitalizeFirstLetter(getDisplayName(rawFontTypeDeclaration)),
-                fontName: capitalizeFirstLetter(getFontName(rawFontTypeDeclaration))
+                fontName,
+                id: fontName,
+                name: capitalizeFirstLetter(getName(rawFontTypeDeclaration))
             };
         })
         .map(font => useHashFunction ? {...font, hash: hashMethod, [hashMethod]: hashFunction(JSON.stringify(font)) } : font);
