@@ -17,6 +17,8 @@ export const legacyColorDeclaration = id => id.match(/COLOR_([\w]+)_([\d]+)?/i);
 export const legacyClipartDeclaration = id => id.match(/CLIPART_([\d]+)?/i);
 export const designsSelectors = '#designs [id*=design]';
 
+export const designsSelectors = '#designs [id*=design]';
+
 export const parse = {
     toolkit: svg => options => {
         const { filename, S3, hashFunction, hashMethod } = options;
