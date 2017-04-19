@@ -55,7 +55,7 @@ window.svgParserClient = domElement => endpoints => {
                         toolkit: toolkit => {
                             console.info('####', 'toolkit', {...toolkit });
                             const tmpPreview = document.createElement('embed');
-                            tmpPreview.setAttribute('src', toolkit.urlThumb);
+                            tmpPreview.setAttribute('src', toolkit.thumbUrl);
                             tmpPreview.style.width = '50%';
                             document.querySelector(`#${loaderId} svg`).outerHTML = tmpPreview.outerHTML;
 
@@ -124,7 +124,7 @@ window.svgParserClient = domElement => endpoints => {
                     }
 
                     parser(document.querySelector(`#${loaderId} svg`))(options).then(parsed => {
-                        console.info('###', 'parsed', parsed);
+                        console.info('###', 'parsed', {...parsed});
                         Object.keys(parsed).filter(a => {
                             return Array.isArray(parsed[a]) ? !!parsed[a].length : !!Object.keys(parsed[a]).length;
                         }).map(key => {
