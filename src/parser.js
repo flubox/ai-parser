@@ -43,25 +43,11 @@ export const parse = {
     },
     designs: svg => options => {
         return new Promise((resolve, reject) => {
-            // const designChecked = lookForProductAttributes(svg);
-            // const product = Object.keys(designChecked).find(key => designChecked[key]);
-            // const productFound = !!product && !!Object.keys(product).length;
-            // if (!productFound) {
-            //     const errors = [{msg: 'DESIGN NOT PARSABLE : no matching product attributes found'}];
-            //     return resolve({designs: [], errors});
-            // }
             const designs = nodeList2Array(document.querySelectorAll(designsSelectors));
-            console.info('...', 'designs', designs, document.querySelectorAll(designsSelectors));
             Promise.all(designs.map(design => {
-                return Promise.all(productsParsers.map(parser => parser(design)(options))).then(values => {
-                    console.info('...', 'all products parsed', values);
-                    return {design :values};
-                }).catch(error => {
-                    console.warn('...', 'unmatched products', error);
-                    return error;
-                })
+                return Promise.all(productsParsers.map(parser => parser(design)(options).catch(error => Promise.resolve(error))))
+                .then(values => values.reduce(merge, {}))
             })).then(values => {
-                console.info('...', 'all designs parsed', values);
                 resolve({designs: values});
             });
         });
