@@ -15,7 +15,6 @@ export const parse = {
     toolkit: svg => options => {
         const { filename, S3, hashFunction, hashMethod } = options;
         const groups = nodeList2Array(svg.querySelectorAll('g#toolkit g'));
-        console.info('...', 'groups', groups);
         if (groups.length === 0) {
             const errors = [{msg: 'TOOLKIT NOT PARSABLE : no matching toolkit attributes found'}];
             return Promise.resolve({then: resolve => resolve({toolkit: false, errors})});
@@ -39,12 +38,10 @@ export const parse = {
       return new Promise((resolve, reject) => {
           const designChecked = lookForProductAttributes(svg);
           const product = Object.keys(designChecked).find(key => designChecked[key]);
-          console.info('###', 'designChecked', designChecked, 'product', product);
           const productFound = !!product && !!Object.keys(product).length;
-          console.info('...', 'designChecked', designChecked, 'productFound', productFound, 'product', product);
           if (!productFound) {
               const errors = [{msg: 'DESIGN NOT PARSABLE : no matching product attributes found'}];
-              return resolve({designs: false, errors});
+              return resolve({designs: [], errors});
           }
           resolve({designs: []});
       });
@@ -53,23 +50,20 @@ export const parse = {
 
 export const parser = svg => options => {
     if (typeof svg === 'string') {
-        const svgElement = document.createElement('div');
-        svgElement.innerHtml = svg;
+        const svgElement = document.querySelector(svg);
+        if (typeof svgElement === 'undefined') {
+            return Promise.reject("Can't find any dom element using selector: " + svg);
+        }
         return parser(svgElement)(options);
     }
 
     const { filename, S3, hashFunction, hashMethod } = options;
 
     return Promise.all([
-        new Promise((resolve, reject) => S3.upload(getSvgUploadOptions(urlThumbPath)(svg.outerHTML)).promise().then(getLocation).then(urlThumb => resolve({ urlThumb }))),
-        Promise.resolve({ colors: getColorsFromRects(colorsGroup)({hashFunction, hashMethod}) }),
-        Promise.resolve({ fonts: getFontsFromGroups(fontsGroup)({hashFunction, hashMethod}) }),
-        new Promise((resolve, reject) => parseImagesFromSVG(filename)(svg)(S3)({hashFunction, hashMethod}).then(images => resolve({ images }))),
-    ]).then(values => values.reduce(merge,
-    {
-        id: filename,
-        title: svg.querySelector('title').textContent
-    }));
+        parse.toolkit(svg)(options),
+        parse.designs(svg)(options)
+    ])
+    .then(values => values.reduce(merge, {}));
 };
 
 export default parser;
