@@ -4,18 +4,22 @@ import { getFontsFromGroups } from './fonts';
 import { parseImagesFromSVG } from './images';
 import { lookForProductAttributes } from './product';
 import { ACL, Bucket, getLocation, getSvgUploadOptions, mkUrl } from './upload';
-import {merge, nodeList2Array} from './helper';
+import {merge, nodeList2Array, reduceByConcat} from './helper';
 import {checkMode, checkContent} from './check';
 import {getDeclaration} from './group';
 
 import parserMug from './parserMug';
 import parserBook from './parserBook';
 
-const productsParsers = [parserMug, parserBook];
+const productsParsers = [
+    // parserMug,
+    parserBook
+];
 
 export const legacyColorDeclaration = id => id.match(/COLOR_([\w]+)_([\d]+)?/i);
 export const legacyClipartDeclaration = id => id.match(/CLIPART_([\d]+)?/i);
-export const designsSelectors = '#designs [id*=design]';
+// export const designsSelectors = '#designs [id*=design]';
+export const designsSelectors = '#designs';
 
 export const parse = {
     toolkit: svg => options => {
@@ -43,12 +47,26 @@ export const parse = {
     designs: svg => options => {
         return new Promise((resolve, reject) => {
             const designs = nodeList2Array(document.querySelectorAll(designsSelectors));
-            Promise.all(designs.map(design => {
-                return Promise.all(productsParsers.map(parser => parser(design)(options).catch(error => Promise.resolve(error))))
-                .then(values => values.reduce(merge, {}))
-            })).then(values => {
-                resolve({designs: values});
-            });
+            const json = JSON.parse(convert.xml2json(svg.outerHTML, {compact: false, spaces: 4}));
+
+            Promise.all(
+                json.elements.map(design => {
+                    return Promise.all(
+                        productsParsers.map(productsParser => productsParser({json})(options))
+                    )
+                    .then(allProductParsers => {
+                        console.info('...', 'allProductParsers', allProductParsers);
+                        return Promise.resolve({
+                            then: resolve => resolve(reduceByConcat(allProductParsers))
+                        });
+                    });
+                })
+            )
+            .then(designsParsed => {
+                resolve({
+                    then: resolve => resolve({designs: reduceByConcat(designsParsed)})
+                });
+            })
         });
     }
 };
