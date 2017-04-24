@@ -55,7 +55,11 @@ export const parse = {
                         productsParsers.map(productsParser => productsParser({json})(options))
                     )
                     .then(allProductParsers => {
-                        console.info('...', 'allProductParsers', allProductParsers);
+                        allProductParsers.map(product => {
+                            const productName = Object.keys(product)[0];
+                            const {surfaces} = product[productName];
+                            console.info('...', `product[${productName}]`, Object.keys(surfaces).length);
+                        })
                         return Promise.resolve({
                             then: resolve => resolve(reduceByConcat(allProductParsers))
                         });
