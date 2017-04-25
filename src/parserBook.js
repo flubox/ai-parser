@@ -1,6 +1,21 @@
 const uuidV4 = require('uuid/v4');
 import {merge} from './helper';
-import {filterUndefinedValues, filterSurfaceError, getAttributes, getProductDeclaration, getTransform, hasId, hasAttributes, is, refineResults} from './surfaces';
+import {
+    adjustType,
+    extractPhysicalSize,
+    filterUndefinedValues,
+    filterSurfaceError,
+    getAttributes,
+    getProductDeclaration,
+    getSiblingsCount,
+    getTransform,
+    hasId,
+    hasAttributes,
+    is,
+    mergeRectUp,
+    mergeTextUp,
+    refineResults
+} from './surfaces';
 import {addDscId, filterDscKey, makeDscValues, mergeDscValues, removeDscKey, nestDscData} from './dsc';
 import {getSub, hasSub} from './sub';
 import {getInnerCount, isCover, isSpine, isInner, extractIndexFromInnerId, byId} from './book';
@@ -66,23 +81,24 @@ export const resolveFromError = e => Promise.resolve(e);
 
 export const getZIndex = ({options, json}) => {
     return new Promise((resolve, reject) => {
-        let z_index = -1;
+        let z = -1;
         if (hasId(json)) {
             const {id} = json.attributes;
             if (byId.isCover(id) || byId.isSpine(id)) {
-                z_index = 0;
+                // console.info('>>>', 'id', id, 'byId.isCover(id)', byId.isCover(id), 'byId.isSpine(id)', byId.isSpine(id));
+                z = 0;
             } else if (byId.isInner(id)) {
                 const extractedIndex = extractIndexFromInnerId(id);
                 // if (id.match(/inner_(\d+)/)) {
                 if (extractedIndex) {
-                    // z_index = getInnerIndex(id);
-                    z_index = extractedIndex[1];
+                    // z = getInnerIndex(id);
+                    z = extractedIndex[1];
                 } else {
-                    z_index = options.innerCount + (id === 'inner_barcode' ? 1 : 2);
+                    z = options.innerCount + (id === 'inner_barcode' ? 1 : 2);
                 }
             }
         }
-        return resolve({z_index});
+        return resolve({z});
     });
 };
 
@@ -96,17 +112,7 @@ export const getSubSurface = ({options, json}) => {
             Promise.all(
                 json.elements.map(json => parseNodeToSurface({options, json}))
             )
-            .then(surfaces => {
-                surfaces = surfaces.filter(filterSurfaceError(options));
-                if (surfaces.length === 1 && surfaces[0].name === 'rect') {
-                    console.info('...', 'has_attributes', has_attributes, 'getSubSurfaces', {...surfaces[0]});
-                }
-                if (surfaces.error) {
-                    reject(surfaces);
-                } else {
-                    resolve({surfaces});
-                }
-            });
+            .then(surfaces => resolve({surfaces: surfaces.filter(filterSurfaceError(options))}));
         } else {
             // reject({then: resolve => resolve()});
             // resolve({error: 'no sub surfaces'});
@@ -121,18 +127,8 @@ export const parseNodeToSurface = ({options, json}) => {
         if (has_id && isDeprecated(json.attributes.id)) {
             resolve({error: 'deprecated'});
         }
-        // if (is({tag: 'g', json})) {
-        //     parseNodeToSurface({options, json: json.elements});
-        //     // const sub = getSubSurface({options, json});
-        //     // sub.then(values => console.info('###', 'values', values, 'json', json)).catch(;
-        //     // Promise.all(getSubSurface({options, json}).catch(e => resolve(e)))
-        //     // .then(values => {
-        //     //     console.info('###', 'values', values);
-        //     //     resolve(values);
-        //     // });
-        // }
         Promise.all([
-            Promise.resolve({id: uuidV4()}),
+            Promise.resolve({uuid: uuidV4()}),
             Promise.resolve({product: 'book'}),
             getAttributes(json),
             getSurfaceType(json),
@@ -149,7 +145,12 @@ export const parseNodeToSurface = ({options, json}) => {
         .then(nestDscData)
         .then(getTransform)
         .then(data => {
-            console.info('>>>>', 'data', data);
+            data = mergeRectUp(data);
+            data = mergeTextUp(data);
+            data = adjustType(data);
+            if (typeof data.id !== 'undefined' && byId.isCover(data.id)) {
+                console.info('>>>', 'data', data);
+            }
             resolve({
                 then: resolve => resolve({...data})
             });
@@ -161,21 +162,25 @@ export const getProductGroup = json => {
     return json.elements[0].elements.find(element => element.attributes && element.attributes.id.indexOf('design') > -1);
 };
 
-export const parseBook = ({json}) => options => {
+export const parseBook = ({svg, json}) => options => {
     options.debug = false;
+    options = {...options, ...extractPhysicalSize(json)};
     return new Promise((resolve, reject) => {
         const bookDesign = getProductGroup(json);
         const productDetected = getProductDeclaration(bookDesign);
         if (productDetected !== 'book') {
             return reject({error: 'design is not a book'});
         }
-        const innerCount = getInnerCount(bookDesign);
+        // const innerCount = getInnerCount(bookDesign);
+        const innerCount = getSiblingsCount(svg)('[id*=design]');
+        console.info('>>>', 'innerCount', innerCount);
         return Promise.all(
             bookDesign.elements.map(json => parseNodeToSurface({options: {...options, innerCount}, json}))
         )
         .then(surfaces => surfaces.filter(filterSurfaceError(options)))
+        .then(surfaces => surfaces.reduce((a, surface) => a.concat(surface), []))
         .then(surfaces => {
-            const sort = (a, b) => a.z_index < b.z_index ? -1 : 1;
+            const sort = (a, b) => a.z < b.z ? -1 : 1;
             surfaces = surfaces.sort(sort);
             return resolve({
                 then: resolve => resolve({
