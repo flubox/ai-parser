@@ -2,7 +2,6 @@ import {merge} from './helper';
 
 export const adjustType = data => {
     if (data.type === 'rect' && data['data-name'] === 'aperture') {
-        console.info('>>>', 'adjustType', data.type !== data['data-name'], data.type, data['data-name'], data);
         return {...data, type: data['data-name']};
     }
     return data;
@@ -72,12 +71,12 @@ export const onlyOneSurface = data => data.surfaces && data.surfaces.length === 
 // export const mergeRawWithSubRaw = data => data.raw.concat(data.surfaces[0].raw);
 export const mergeRawWithSubRaw = data => [].concat(data.raw, data.surfaces[0].raw);
 
-export const mergeRectUp = data => {
-    if (onlyOneSurface(data) && data.surfaces[0].type === 'rect') {
-        data = filterUndefinedValues({...data, ...data.surfaces[0], surfaces: undefined, raw: mergeRawWithSubRaw(data)});
-    }
-    return data;
-};
+// export const mergeRectUp = data => {
+//     if (onlyOneSurface(data) && data.surfaces[0].type === 'rect') {
+//         data = filterUndefinedValues({...data, ...data.surfaces[0], surfaces: undefined, raw: mergeRawWithSubRaw(data)});
+//     }
+//     return data;
+// };
 
 export const mergeTextUp = data => {
     if (onlyOneSurface(data) && data.surfaces[0].type === 'text') {
@@ -92,3 +91,9 @@ export const mergeUseUp = data => {
     }
     return data;
 };
+
+export const extractSubSurfaces = data => {
+    return data.surfaces && data.surfaces.length ? [{...data, surfaces: data.surfaces.map(s => s.uuid)}].concat(data.surfaces) : data;
+};
+
+export const extractUuids = surface => Array.isArray(surface) ? surface.map(extractUuids) : surface.uuid;

@@ -3,6 +3,8 @@ import {merge} from './helper';
 import {
     adjustType,
     extractPhysicalSize,
+    extractSubSurfaces,
+    extractUuids,
     filterUndefinedValues,
     filterSurfaceError,
     getAttributes,
@@ -12,13 +14,12 @@ import {
     hasId,
     hasAttributes,
     is,
-    mergeRectUp,
     mergeTextUp,
     refineResults
 } from './surfaces';
 import {addDscId, filterDscKey, makeDscValues, mergeDscValues, removeDscKey, nestDscData} from './dsc';
 import {getSub, hasSub} from './sub';
-import {getInnerCount, isCover, isSpine, isInner, extractIndexFromInnerId, byId} from './book';
+import {byId, extractIndexFromInnerId, getInnerCount, isCover, isInner, isSpine, mergeRectUp} from './book';
 
 export const isDeprecated = id => id && id.indexOf('_autofillable') > -1 && id.indexOf('inner') === 0;
 
@@ -146,13 +147,20 @@ export const parseNodeToSurface = ({options, json}) => {
         .then(getTransform)
         .then(data => {
             data = mergeRectUp(data);
-            data = mergeTextUp(data);
-            data = adjustType(data);
-            if (typeof data.id !== 'undefined' && byId.isCover(data.id)) {
-                console.info('>>>', 'data', data);
+            // data = mergeTextUp(data);
+            // data = adjustType(data);
+            // if (typeof data.id !== 'undefined' && byId.isCover(data.id)) {
+            //     console.info('>>>', 'data', data);
+            // }
+            // data = extractSubSurfaces(data);
+            if (data.surfaces) {
+                // console.info('>>>', 'data', data.type, data);
+                const uuidList = extractUuids(data.surfaces).reduce((a, b) => a.concat(b), []);
+                data = [{...data, surfaces: uuidList}].concat(data.surfaces.reduce((a, b) => a.concat(b), []));
             }
             resolve({
-                then: resolve => resolve({...data})
+                // then: resolve => resolve({...data})
+                then: resolve => resolve(data)
             });
         });
     });
@@ -185,10 +193,10 @@ export const parseBook = ({svg, json}) => options => {
             return resolve({
                 then: resolve => resolve({
                     [productDetected]: {
-                        id: uuidV4(),
+                        uuid: uuidV4(),
                         surfaces: surfaces.reduce((a, data) => {
-                            // console.info('>>>>', 'data', data);
-                            return ({...a, [data.id]: data});
+                            console.info('>>>>', 'data', data);
+                            return ({...a, [data.uuid]: data});
                         }, {})
                     }
                 })

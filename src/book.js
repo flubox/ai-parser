@@ -1,3 +1,5 @@
+import {filterUndefinedValues, mergeRawWithSubRaw, onlyOneSurface} from './surfaces';
+
 export const isCover = id => id.indexOf('cover') > -1;
 
 export const isSpine = id => id.indexOf('spine') > -1;
@@ -14,3 +16,10 @@ export const getInnerIndex = id => {
 export const byId = {isCover, isSpine, isInner};
 
 export const getInnerCount = json => json.elements.filter(({attributes}) => attributes.id.indexOf('inner') > -1).length;
+
+export const mergeRectUp = data => {
+    if (onlyOneSurface(data) && data.type === 'aperture' && data.surfaces[0].type === 'rect') {
+        data = filterUndefinedValues({...data, ...data.surfaces[0], type: 'aperture', surfaces: undefined, 'data-name': undefined, raw: mergeRawWithSubRaw(data)});
+    }
+    return data;
+};
