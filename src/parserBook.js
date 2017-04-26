@@ -1,71 +1,48 @@
 const uuidV4 = require('uuid/v4');
-import {merge} from './helper';
+import {
+    extractClipPaths,
+    extractSymbols,
+    extractUnit,
+    extractUuids,
+    filterUndefinedValues,
+    getAttributes,
+    getTypeFromId,
+    indexUp,
+    merge,
+    reduceByMerge,
+    resolveByType,
+    riseSurfaces
+} from './helper';
+import {checkIfHasElements, checkIfSvg} from './check';
 import {
     adjustType,
     extractPhysicalSize,
     extractSubSurfaces,
-    extractUuids,
-    filterUndefinedValues,
     filterSurfaceError,
-    getAttributes,
-    getProductDeclaration,
     getSiblingsCount,
     getTransform,
     hasId,
     hasAttributes,
     is,
     mergeTextUp,
-    refineResults
+    refineResults,
+    resolveUse
 } from './surfaces';
 import {addDscId, filterDscKey, makeDscValues, mergeDscValues, removeDscKey, nestDscData} from './dsc';
 import {getSub, hasSub} from './sub';
-import {byId, extractIndexFromInnerId, getInnerCount, isCover, isInner, isSpine, mergeRectUp} from './book';
+import {byId, extractIndexFromInnerId, getInnerCount, isCover, isInner, isSpine, resolveAperture, resolveRect} from './book';
+import {getProductDeclaration} from './product';
+
+export const resolveList = [
+    resolveAperture,
+    // resolveUse,
+    // resolveRect,
+    // mergeTextUp
+];
 
 export const isDeprecated = id => id && id.indexOf('_autofillable') > -1 && id.indexOf('inner') === 0;
 
 export const filterDeprecatedElement = element => isDeprecated(element.attributes.id);
-
-export const getTypeFromId = id => id.split(/[-_]/)[0];
-
-// export const isText = json => is('text')(json);
-
-export const filterTag = tag => element => element.name === tag;
-
-// export const containsTexts = json => hasSub('text')(json);
-
-// export const aggregateTexts = json => {
-//     const text = getSub('tspan')(json).map(htmlText => htmlText.textContent).join()
-// };
-
-export const getColor = json => {
-    return new Promise((resolve, reject) => {
-        if (hasAttributes(json)) {
-            const {fill} = json.attributes;
-            return resolve({fill});
-        }
-        reject();
-    });
-};
-
-export const getPosition = json => {
-    return new Promise((resolve, reject) => {
-        if (hasAttributes(json)) {
-            const {x, y} = json.attributes;
-            return resolve({x, y});
-        }
-        reject();
-    });
-};
-
-export const getSize = json => {
-    return new Promise((resolve, reject) => {
-        if (hasAttributes(json)) {
-            const {height, width} = json.attributes;
-            return resolve({height, width});
-        }
-        reject();
-    });
-};
 
 export const getSurfaceType = ({attributes, elements, name}) => {
     return new Promise((resolve, reject) => {
@@ -113,7 +90,7 @@ export const getSubSurface = ({options, json}) => {
             Promise.all(
                 json.elements.map(json => parseNodeToSurface({options, json}))
             )
-            .then(surfaces => resolve({surfaces: surfaces.filter(filterSurfaceError(options))}));
+            .then(surfaces => resolve({surfaces: surfaces.filter(filterSurfaceError(options)).filter(filterUndefinedValues)}));
         } else {
             // reject({then: resolve => resolve()});
             // resolve({error: 'no sub surfaces'});
@@ -145,19 +122,20 @@ export const parseNodeToSurface = ({options, json}) => {
         .then(filterUndefinedValues)
         .then(nestDscData)
         .then(getTransform)
+        .then(resolveByType(options)(resolveList))
+        .then(options.flat ? riseSurfaces(options) : d => d)
         .then(data => {
-            data = mergeRectUp(data);
-            // data = mergeTextUp(data);
             // data = adjustType(data);
-            // if (typeof data.id !== 'undefined' && byId.isCover(data.id)) {
-            //     console.info('>>>', 'data', data);
-            // }
+
             // data = extractSubSurfaces(data);
-            if (data.surfaces) {
-                // console.info('>>>', 'data', data.type, data);
-                const uuidList = extractUuids(data.surfaces).reduce((a, b) => a.concat(b), []);
-                data = [{...data, surfaces: uuidList}].concat(data.surfaces.reduce((a, b) => a.concat(b), []));
+            if (data.type === 'use') {
+                console.info('>>>', 'data', data);
             }
+            // if (data.surfaces) {
+            //     // console.info('>>>', 'data', data.type, data);
+            //     const uuidList = extractUuids(data.surfaces).reduce((a, b) => a.concat(b), []);
+            //     data = [{...data, surfaces: uuidList}].concat(data.surfaces.reduce((a, b) => a.concat(b), []));
+            // }
             resolve({
                 // then: resolve => resolve({...data})
                 then: resolve => resolve(data)
@@ -172,7 +150,19 @@ export const getProductGroup = json => {
 
 export const parseBook = ({svg, json}) => options => {
     options.debug = false;
-    options = {...options, ...extractPhysicalSize(json)};
+    console.info('...', 'json', json);
+    // if (typeof json.name === 'undefined' && typeof json.elements !== 'undefined' && json.elements.length === 1) {
+    //     return parseBook({svg, json: json.elements[0]});
+    // }
+    const flat = options.flat || false;
+    const {width, height} = extractPhysicalSize(json.elements[0].attributes);
+    const unit = extractUnit(width || height);
+    const symbols = reduceByMerge(extractSymbols(json).map(s => indexUp(s.attributes.id)(s)));
+    const clipPath = reduceByMerge(extractClipPaths(json).map(s => indexUp(s.attributes.id)(s)));
+    const defs = {symbols, clipPath};
+    console.info('...', 'defs', {...defs}, {...clipPath}, {...symbols});
+    // console.info('...', 'unit', unit);
+    options = {...options, defs, unit, width, height};
     return new Promise((resolve, reject) => {
         const bookDesign = getProductGroup(json);
         const productDetected = getProductDeclaration(bookDesign);
@@ -194,9 +184,11 @@ export const parseBook = ({svg, json}) => options => {
                 then: resolve => resolve({
                     [productDetected]: {
                         uuid: uuidV4(),
+                        product: 'book',
+                        type: 'book',
                         surfaces: surfaces.reduce((a, data) => {
-                            console.info('>>>>', 'data', data);
-                            return ({...a, [data.uuid]: data});
+                            // console.info('>>>>', 'data', data);
+                            return ({...a, [flat ? data.uuid : data.id]: data});
                         }, {})
                     }
                 })

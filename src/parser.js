@@ -63,7 +63,8 @@ export const parse = {
                         return Promise.resolve({
                             then: resolve => resolve(reduceByConcat(allProductParsers))
                         });
-                    });
+                    })
+                    .catch(error => resolve(error));
                 })
             )
             .then(designsParsed => {

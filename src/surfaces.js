@@ -1,4 +1,4 @@
-import {merge} from './helper';
+import {filterUndefinedValues, getUse, merge} from './helper';
 
 export const adjustType = data => {
     if (data.type === 'rect' && data['data-name'] === 'aperture') {
@@ -11,16 +11,14 @@ export const cleanedElementId = ({attributes}) => attributes.id.split('_').filte
 
 export const extractPhysicalSize = ({width, height}) => ({width, height});
 
-export const filterUndefinedValues = data => Object.keys(data).filter(k => !!data[k]).reduce((a, k) => ({...a, [k]: data[k]}), {});
-
-export const getProductDeclaration = json => {
-    if (json.attributes && json.attributes.id && json.attributes.id.indexOf('design:') === 0) {
-        return json.attributes.id.split(':')[1];
-    } else if (json.elements && json.elements.length === 1) {
-        return getProductDeclaration(json.elements[0]);
-    }
-    return undefined;
-};
+// export const getProductDeclaration = json => {
+//     if (json.attributes && json.attributes.id && json.attributes.id.indexOf('design:') === 0) {
+//         return json.attributes.id.split(':')[1];
+//     } else if (json.elements && json.elements.length === 1) {
+//         return getProductDeclaration(json.elements[0]);
+//     }
+//     return undefined;
+// };
 
 export const getProductGroup = json => {
     return json.elements[0].elements.find(element => element.attributes && element.attributes.id.indexOf('design') > -1);
@@ -29,8 +27,6 @@ export const getProductGroup = json => {
 export const hasId = json => json.attributes && json.attributes.id;
 
 export const hasAttributes = json => !!json.attributes;
-
-export const getAttributes = json => json.attributes;
 
 export const is = ({tag, json}) => json.name === tag;
 
@@ -78,9 +74,10 @@ export const mergeRawWithSubRaw = data => [].concat(data.raw, data.surfaces[0].r
 //     return data;
 // };
 
-export const mergeTextUp = data => {
+export const mergeTextUp = options => data => {
     if (onlyOneSurface(data) && data.surfaces[0].type === 'text') {
-        data = filterUndefinedValues({...data, ...data.surfaces[0], surfaces: undefined, raw: mergeRawWithSubRaw(data)});
+        const {id, type} = data;
+        data = filterUndefinedValues({...data, ...data.surfaces[0], surfaces: undefined, raw: mergeRawWithSubRaw(data), id, type});
     }
     return data;
 };
@@ -96,4 +93,35 @@ export const extractSubSurfaces = data => {
     return data.surfaces && data.surfaces.length ? [{...data, surfaces: data.surfaces.map(s => s.uuid)}].concat(data.surfaces) : data;
 };
 
-export const extractUuids = surface => Array.isArray(surface) ? surface.map(extractUuids) : surface.uuid;
+export const hasSymbols = data => typeof data['xlink:href'] !== 'undefined';
+
+export const getSymbols = ({symbols}) => data => symbols[getXlinkHref(data).substr(1)];
+
+export const getXlinkHref = data => data['xlink:href'];
+
+export const addUseToData = ({symbols}) => data => ({...data, use: getSymbols({symbols})(data)});
+
+export const mergeWithUse = ({symbols}) => data => {
+    const use = getSymbols({symbols})(data);
+    return {...data, use};
+};
+
+export const resolveUse = ({debug, defs}) => data => {
+    if (data.type === 'use') {
+        const has_symbols = hasSymbols(data);
+        if (debug && has_symbols) {
+            console.warn('use detected, but no xlik:href found', data);
+            return data;
+        }
+        // console.info('...', 'resolveUse', data.type, 'data', data);
+        const symbols = getSymbols(defs)(data);
+        // console.info('...', 'symbols', symbols);
+        const use = getUse(defs)(symbols);
+        const elements = use ? [use] : undefined
+        const toBeRemoved = {elements, 'xlink:href': undefined};
+        const newData = filterUndefinedValues({...data, ...toBeRemoved});
+        console.info('###', 'data', newData, 'use', use);
+        return newData;
+    }
+    return data;
+};
