@@ -9,11 +9,11 @@ import {checkMode, checkContent} from './check';
 import {getDeclaration} from './group';
 
 import parserMug from './parserMug';
-import parserBook from './parserBook';
+import {parseBook, parseBookToDSC} from './parserBook';
 
 const productsParsers = [
     // parserMug,
-    parserBook
+    [parseBook, parseBookToDSC]
 ];
 
 export const legacyColorDeclaration = id => id.match(/COLOR_([\w]+)_([\d]+)?/i);
@@ -52,13 +52,13 @@ export const parse = {
             Promise.all(
                 json.elements.map(design => {
                     return Promise.all(
-                        productsParsers.map(productsParser => productsParser({json})(options))
+                        productsParsers.map(productsParser => productsParser[0]({json})(options).then(productsParser[1](options)))
                     )
                     .then(allProductParsers => {
                         allProductParsers.map(product => {
                             const productName = Object.keys(product)[0];
-                            const {surfaces} = product[productName];
-                            console.info('...', `product[${productName}]`, Object.keys(surfaces).length);
+                            // const {surfaces} = product[productName];
+                            console.info('...', `product[${productName}]`, Object.keys(surfaces).length, surfaces);
                         })
                         return Promise.resolve({
                             then: resolve => resolve(reduceByConcat(allProductParsers))

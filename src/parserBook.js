@@ -5,9 +5,11 @@ import {
     extractUnit,
     extractUuids,
     filterUndefinedValues,
+    filterEmptySurfaces,
     getAttributes,
     getTypeFromId,
     indexUp,
+    isolate,
     merge,
     reduceByMerge,
     resolveByType,
@@ -28,7 +30,7 @@ import {
     refineResults,
     resolveUse
 } from './surfaces';
-import {addDscId, filterDscKey, makeDscValues, mergeDscValues, removeDscKey, nestDscData} from './dsc';
+import {addDscId, filterDscKey, makeDscValues, mergeDscValues, removeDscKey, nestDscData, surfaceToDsc, toDsc} from './dsc';
 import {getSub, hasSub} from './sub';
 import {byId, extractIndexFromInnerId, getInnerCount, isCover, isInner, isSpine, resolveAperture, resolveRect} from './book';
 import {getProductDeclaration} from './product';
@@ -43,6 +45,13 @@ export const resolveList = [
 export const isDeprecated = id => id && id.indexOf('_autofillable') > -1 && id.indexOf('inner') === 0;
 
 export const filterDeprecatedElement = element => isDeprecated(element.attributes.id);
+
+export const getRotation = data => {
+    return new Promise((resolve, reject) => {
+        const rotation = 0;
+        resolve({...data, rotation});
+    });
+};
 
 export const getSurfaceType = ({attributes, elements, name}) => {
     return new Promise((resolve, reject) => {
@@ -112,6 +121,7 @@ export const parseNodeToSurface = ({options, json}) => {
             getSurfaceType(json),
             getZIndex({options, json}),
             getSubSurface({options, json}).catch(resolveFromError),
+            getRotation(json),
             // getPosition(json).catch(resolveFromError),
             // getSize(json).catch(resolveFromError),
             // getColor(json).catch(resolveFromError),
@@ -120,16 +130,16 @@ export const parseNodeToSurface = ({options, json}) => {
         .then(refineResults(json))
         .then(addDscId(has_id ? json.attributes.id : undefined))
         .then(filterUndefinedValues)
+        .then(filterEmptySurfaces)
         .then(nestDscData)
         .then(getTransform)
         .then(resolveByType(options)(resolveList))
         .then(options.flat ? riseSurfaces(options) : d => d)
         .then(data => {
             // data = adjustType(data);
-
             // data = extractSubSurfaces(data);
             if (data.type === 'use') {
-                console.info('>>>', 'data', data);
+                // console.info('>>>', 'data', data);
             }
             // if (data.surfaces) {
             //     // console.info('>>>', 'data', data.type, data);
@@ -160,8 +170,6 @@ export const parseBook = ({svg, json}) => options => {
     const symbols = reduceByMerge(extractSymbols(json).map(s => indexUp(s.attributes.id)(s)));
     const clipPath = reduceByMerge(extractClipPaths(json).map(s => indexUp(s.attributes.id)(s)));
     const defs = {symbols, clipPath};
-    console.info('...', 'defs', {...defs}, {...clipPath}, {...symbols});
-    // console.info('...', 'unit', unit);
     options = {...options, defs, unit, width, height};
     return new Promise((resolve, reject) => {
         const bookDesign = getProductGroup(json);
@@ -171,7 +179,6 @@ export const parseBook = ({svg, json}) => options => {
         }
         // const innerCount = getInnerCount(bookDesign);
         const innerCount = getSiblingsCount(svg)('[id*=design]');
-        console.info('>>>', 'innerCount', innerCount);
         return Promise.all(
             bookDesign.elements.map(json => parseNodeToSurface({options: {...options, innerCount}, json}))
         )
@@ -186,15 +193,22 @@ export const parseBook = ({svg, json}) => options => {
                         uuid: uuidV4(),
                         product: 'book',
                         type: 'book',
-                        surfaces: surfaces.reduce((a, data) => {
-                            // console.info('>>>>', 'data', data);
-                            return ({...a, [flat ? data.uuid : data.id]: data});
-                        }, {})
+                        surfaces: surfaces.reduce((a, data) => ({...a, [flat ? data.uuid : data.id]: data}), {})
                     }
                 })
             });
         })
     });
+};
+
+export const parseBookToDSC = options => data => {
+    const productDeclaration = isolate(Object.keys(data));
+    const product = data[productDeclaration];
+    console.warn('before', 'parseBookToDSC', 'product', product);
+    const converted = surfaceToDsc({...options, debug: true})(product);
+    // const converted = {[product]: {...data[product], surfaces: toDsc(options)(data[product])}};
+    console.info('after', 'parseBookToDSC', 'converted', {...converted.surfaces.inner_01.surfaces.inner_7315.surfaces});
+    return converted;
 };
 
 export default parseBook;

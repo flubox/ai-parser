@@ -58,6 +58,8 @@ export const filterTag = tag => element => element.name === tag;
 
 export const filterUndefinedValues = data => Object.keys(data).filter(k => !!data[k]).reduce((a, k) => ({...a, [k]: data[k]}), {});
 
+export const filterEmptySurfaces = data => typeof data.surfaces === 'undefined' ? data : (Object.keys(data.surfaces).length ? data : filterUndefinedValues({...data, surfaces: undefined}));
+
 export const getAttributes = json => json.attributes;
 
 export const getSubGroupsWithId = svg => svg.querySelectorAll('g[id]');
@@ -143,3 +145,13 @@ export const riseSurfaces = ({debug}) => data => {
 };
 
 export const useClipPath = defs => id => Array.isArray(id) ? reduceByMerge(id.map(useClipPath(defs))) : ({...defs.clipPath[id]});
+
+export const uCase = (start = 0) => (end = 1) => text => text.substr(start, end).toUpperCase;
+
+export const lCase = (start = 0) => text => text.substr(start).toLowerCase();
+
+export const camel = text => {
+    const result = `${uCase(0)(1)(text)}${lCase(1)(text)}`;
+    console.info('>>>>>>>>>>', result);
+    return result;
+};

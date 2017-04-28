@@ -154,8 +154,8 @@ window.svgParserClient = domElement => endpoints => {
 
                                 // Object.keys(design[product].surfaces).forEach(k => design[product].surfaces[k]).map(console.info);
                                 for (const id in design[product].surfaces) {
-                                    console.info('.........', 'id', id, design[product].surfaces[id]);
-                                    toHtml(productElement)(design[product].surfaces[id]);
+                                    // console.info('.........', 'id', id, design[product].surfaces[id]);
+                                    // toHtml(productElement)(design[product].surfaces[id]);
                                 }
 
                                 productElement.appendChild(productTitle);
@@ -175,9 +175,10 @@ window.svgParserClient = domElement => endpoints => {
                         // const {surfaces} = book;
                         // console.info('###', 'surfaces', {...surfaces.inner_01});
                         // console.info('###', 'surfaces', {...parsed.designs[0].book});
-                        Object.keys(parsed).filter(a => {
-                            return Array.isArray(parsed[a]) ? !!parsed[a].length : !!Object.keys(parsed[a]).length;
-                        }).map(key => {
+                        const filterErrors = key => key !== 'error';
+                        const filterEmpty = parsed => key => Array.isArray(parsed[key]) ? !!parsed[key].length : !!Object.keys(parsed[key]).length;
+                        Object.keys(parsed).filter(filterErrors).filter(filterEmpty(parsed)).map(key => {
+                            console.info('...', `parsed[${key}]`, parsed[key], typeof onParsed[key]);
                             return Array.isArray(parsed[key]) ? parsed[key].map(onParsed[key]) : onParsed[key](parsed[key])
                         } );
                     });
