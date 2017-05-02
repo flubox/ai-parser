@@ -41,7 +41,7 @@ export const surfacesReduce = key => (accumulator, surface) => ({...accumulator,
 
 export const surfaceToDsc = options => data => {
     data = dscFunctions(options).reduce(dscFunctionsReduce, data);
-    console.warn('surfaceToDsc', data);
+    // console.warn('surfaceToDsc', data);
 
     if (typeof data.surfaces !== 'undefined') {
         const surfacesKeys = Object.keys(data.surfaces);
@@ -51,7 +51,7 @@ export const surfaceToDsc = options => data => {
         }, {});
         return {...data, surfaces};
     } else if (options.debug) {
-        console.warn('no data.surfaces found');
+        // console.warn('no data.surfaces found');
     }
 
     return data;

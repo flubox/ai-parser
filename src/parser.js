@@ -4,7 +4,7 @@ import { getFontsFromGroups } from './fonts';
 import { parseImagesFromSVG } from './images';
 import { lookForProductAttributes } from './product';
 import { ACL, Bucket, getLocation, getSvgUploadOptions, mkUrl } from './upload';
-import {merge, nodeList2Array, reduceByConcat} from './helper';
+import {getViewBox, merge, nodeList2Array, reduceByConcat} from './helper';
 import {checkMode, checkContent} from './check';
 import {getDeclaration} from './group';
 
@@ -48,11 +48,15 @@ export const parse = {
         return new Promise((resolve, reject) => {
             const designs = nodeList2Array(document.querySelectorAll(designsSelectors));
             const json = JSON.parse(convert.xml2json(svg.outerHTML, {compact: false, spaces: 4}));
+            const viewbox = getViewBox(json.elements[0]);
+            const viewport = { width: window.innerWidth, height: window.innerHeight };
+            options = {...options, viewbox, viewport};
+            console.info('...', 'options', options);
 
             Promise.all(
                 json.elements.map(design => {
                     return Promise.all(
-                        productsParsers.map(productsParser => productsParser[0]({json})(options).then(productsParser[1](options)))
+                        productsParsers.map(productsParser => productsParser[0]({json})({...options}).then(productsParser[1]({...options, viewbox})))
                     )
                     .then(allProductParsers => {
                         allProductParsers.map(product => {

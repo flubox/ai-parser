@@ -10,10 +10,16 @@ import {
     getTypeFromId,
     indexUp,
     isolate,
+    keys,
+    keysExcept,
     merge,
+    mergeWith,
+    not,
     reduceByMerge,
     resolveByType,
-    riseSurfaces
+    riseSurfaces,
+    toFloat,
+    toUnit
 } from './helper';
 import {checkIfHasElements, checkIfSvg} from './check';
 import {
@@ -38,7 +44,7 @@ import {getProductDeclaration} from './product';
 export const resolveList = [
     resolveAperture,
     // resolveUse,
-    // resolveRect,
+    resolveRect
     // mergeTextUp
 ];
 
@@ -46,20 +52,33 @@ export const isDeprecated = id => id && id.indexOf('_autofillable') > -1 && id.i
 
 export const filterDeprecatedElement = element => isDeprecated(element.attributes.id);
 
-export const getRotation = data => {
-    return new Promise((resolve, reject) => {
-        const rotation = 0;
-        resolve({...data, rotation});
-    });
+export const getRotation = data => new Promise(resolve => resolve({...keysExcept(data)('type').reduce(mergeWith(data), {}), rotation: 0}));
+
+export const removeAttributes = data => filterUndefinedValues({...data, attributes: undefined});
+
+export const removeElements = data => filterUndefinedValues({...data, elements: undefined});
+
+export const riseTspan = data => {
+    
+    return data;
 };
 
-export const getSurfaceType = ({attributes, elements, name}) => {
+export const getSurfaceType = ({attributes, name, type}) => {
     return new Promise((resolve, reject) => {
-        if (attributes && attributes.id) {
-            return resolve({then: resolve => resolve({type: getTypeFromId(attributes.id)})});
-        } else if (name) {
-            return resolve({then: resolve => resolve({type: name})});
+        const has_id = attributes && !!attributes.id;
+        const has_name = typeof name !== 'undefined';
+        type = undefined;
+        if (has_id) {
+            type = getTypeFromId(attributes.id);
+            // if (type === 'cover') {
+            //     console.info('############', 'getSurfaceType', has_id, attributes.id, has_name, name, type);
+            // }
+            return resolve({then: resolve => resolve({type})});
+        } else if (has_name) {
+            type = name;
+            return resolve({then: resolve => resolve({type})});
         }
+
         return resolve({error: 'no type'});
     });
 };
@@ -122,24 +141,33 @@ export const parseNodeToSurface = ({options, json}) => {
             getZIndex({options, json}),
             getSubSurface({options, json}).catch(resolveFromError),
             getRotation(json),
+
             // getPosition(json).catch(resolveFromError),
             // getSize(json).catch(resolveFromError),
             // getColor(json).catch(resolveFromError),
             // getTransform(json).catch(resolveFromError)
         ])
+        // .then(result => {
+        //     console.info('#######', 'result', [...result]);
+        //     return result;
+        // })
         .then(refineResults(json))
+        .then(removeAttributes)
+        .then(removeElements)
         .then(addDscId(has_id ? json.attributes.id : undefined))
         .then(filterUndefinedValues)
         .then(filterEmptySurfaces)
         .then(nestDscData)
         .then(getTransform)
         .then(resolveByType(options)(resolveList))
-        .then(options.flat ? riseSurfaces(options) : d => d)
+        .then(toFloat)
+        .then(toUnit(options))
+        // .then(options.flat ? riseSurfaces(options) : d => d)
         .then(data => {
             // data = adjustType(data);
             // data = extractSubSurfaces(data);
-            if (data.type === 'use') {
-                // console.info('>>>', 'data', data);
+            if (data.type === 'layout') {
+                console.info('>>>', 'data', data, Array.isArray(data));
             }
             // if (data.surfaces) {
             //     // console.info('>>>', 'data', data.type, data);

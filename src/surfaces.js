@@ -30,7 +30,12 @@ export const hasAttributes = json => !!json.attributes;
 
 export const is = ({tag, json}) => json.name === tag;
 
-export const refineResults = raw => results => ({...results.reduce(merge, {}), raw});
+export const refineResults = raw => results => {
+    let refined = ({...results.filter(a => !!a).reduce(merge, {})});
+    refined.raw = raw;
+    // console.info('refineResults', raw, results.filter(a => !!a), refined);
+    return refined;
+};
 
 export const filterSurfaceError = ({debug}) => surface => {
     if (typeof surface.error !== 'undefined') {
@@ -76,6 +81,7 @@ export const mergeRawWithSubRaw = data => [].concat(data.raw, data.surfaces[0].r
 
 export const mergeTextUp = options => data => {
     if (onlyOneSurface(data) && data.surfaces[0].type === 'text') {
+        console.info('...', 'mergeTextUp', data);
         const {id, type} = data;
         data = filterUndefinedValues({...data, ...data.surfaces[0], surfaces: undefined, raw: mergeRawWithSubRaw(data), id, type});
     }
@@ -110,7 +116,7 @@ export const resolveUse = ({debug, defs}) => data => {
     if (data.type === 'use') {
         const has_symbols = hasSymbols(data);
         if (debug && has_symbols) {
-            console.warn('use detected, but no xlik:href found', data);
+            // console.warn('use detected, but no xlik:href found', data);
             return data;
         }
         // console.info('...', 'resolveUse', data.type, 'data', data);
@@ -120,7 +126,7 @@ export const resolveUse = ({debug, defs}) => data => {
         const elements = use ? [use] : undefined
         const toBeRemoved = {elements, 'xlink:href': undefined};
         const newData = filterUndefinedValues({...data, ...toBeRemoved});
-        console.info('###', 'data', newData, 'use', use);
+        // console.info('###', 'data', newData, 'use', use);
         return newData;
     }
     return data;
