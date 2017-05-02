@@ -1,6 +1,6 @@
 import {nestDscData} from './dsc';
 import {mergeRawWithSubRaw, onlyOneSurface} from './surfaces';
-import {filterUndefinedValues} from './helper';
+import {concat, filterUndefinedValues, is} from './helper';
 
 export const isCover = id => id.indexOf('cover') > -1;
 
@@ -29,8 +29,26 @@ export const resolveAperture = options => data => {
 };
 
 export const resolveRect = options => data => {
-    if (onlyOneSurface(data) && data.type === 'aperture' && data.surfaces[0].type === 'rect') {
-        data = filterUndefinedValues({...data, ...data.surfaces[0], type: 'aperture', surfaces: undefined, 'data-name': undefined, raw: mergeRawWithSubRaw(data)});
+    const apertureWithSubRect = onlyOneSurface(data) && data.type === 'aperture' && data.surfaces[0].type === 'rect';
+    const layerWithSubAperture = onlyOneSurface(data) && data.type === 'layer' && data.surfaces[0].type === 'aperture';
+    const spineWithSubLayer = onlyOneSurface(data) && data.type === 'spine' && data.surfaces[0].type === 'layer';
+    const layoutWithSubSurfaces = onlyOneSurface(data) && data.type === 'layout' && data.surfaces[0].type === 'g' && data.surfaces[0].surfaces;
+
+    if (apertureWithSubRect && layerWithSubAperture && spineWithSubLayer) {
+        data = filterUndefinedValues({...data.surfaces[0], ...data, surfaces: undefined, 'data-name': undefined, raw: mergeRawWithSubRaw(data)});
     }
+
+    if (layoutWithSubSurfaces) {
+        data = {
+            ...data,
+            surfaces: data.surfaces[0].surfaces.map(surface => {
+                if (surface.surfaces && surface.surfaces.every(({type}) => is('rect'))) {
+                    return surface.surfaces;
+                }
+                return surface;
+            }).reduce(concat, [])
+        };
+    }
+
     return data;
 };
