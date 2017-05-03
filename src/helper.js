@@ -19,6 +19,7 @@ export const not = a => b => a !== b;
 export const is = a => b => a === b;
 
 export const convertToUnit = dimension => viewbox => viewport => value => {
+    // console.info('convertToUnit', dimension, viewbox, viewport, value, viewport[dimension], viewbox[dimension], `${value} * (${viewport[dimension]} / ${viewbox[dimension]})`);
     if (viewbox[dimension] === 0) {
         return value;
     } 
@@ -26,10 +27,11 @@ export const convertToUnit = dimension => viewbox => viewport => value => {
 };
 
 export const toUnit = options => data => {
+    // if (data.type === 'rect') console.info('\n', data.type, data);
     const {viewbox, viewport} = options;
     const converted = keys(data).filter(only(['x', 'y', 'width', 'height'])).reduce((accumulator, k) => {
         const dimension = ['x', 'width'].includes(k) ? 'width' : 'height';
-        console.info('convertToUnit', data[k], convertToUnit(dimension)(viewbox)(viewport)(data[k]));
+        // if (data.type === 'rect') console.info('toUnit', k, `dimension:${dimension}`, data[k] === 0, data[k], convertToUnit(dimension)(viewbox)(viewport)(data[k]));
         return {...accumulator, [k]: data[k] === 0 ? data[k] : convertToUnit(dimension)(viewbox)(viewport)(data[k])};
     }, {});
     return {...data, ...converted};
@@ -154,7 +156,7 @@ export const getViewBox = json => {
     if (json && json.attributes && json.attributes.viewBox) {
         const {viewBox} = json.attributes;
         const matched = viewBox.match(/([\d\.]+)+/g);
-        const keys = ['x', 'y', 'width', 'heigh'];
+        const keys = ['x', 'y', 'width', 'height'];
         return matched.reduce((accumulator, value, index) => ({...accumulator, [keys[index]]: parseFloat(value)}), {});
     }
     return false;

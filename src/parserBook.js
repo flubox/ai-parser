@@ -235,7 +235,7 @@ export const parseBookToDSC = options => data => {
     console.warn('before', 'parseBookToDSC', 'product', product);
     const converted = surfaceToDsc({...options, debug: true})(product);
     // const converted = {[product]: {...data[product], surfaces: toDsc(options)(data[product])}};
-    console.info('after', 'parseBookToDSC', 'converted', {...converted.surfaces.inner_01.surfaces.inner_7315.surfaces});
+    console.info('after', 'parseBookToDSC', 'converted', {...product.surfaces.cover_front_outside_autofillable.surfaces[4].surfaces[3]});
     return converted;
 };
 
