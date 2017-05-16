@@ -2,11 +2,11 @@ import test from 'ava';
 import * as fonts from '../src/fonts';
 import md5 from 'blueimp-md5';
 
-test('fonts.filterFontsById', t => {
-    t.truthy(fonts.filterFontsById({ id: 'fonts' }));
-    t.falsy(fonts.filterFontsById({}));
-    t.falsy(fonts.filterFontsById({ id: 'lorem' }));
-});
+// test('fonts.filterFontsById', t => {
+//     t.truthy(fonts.filterFontsById({ id: 'fonts' }));
+//     t.falsy(fonts.filterFontsById({}));
+//     t.falsy(fonts.filterFontsById({ id: 'lorem' }));
+// });
 
 test('fonts.getFontTypeDeclaration', t => {
     const text = { getAttribute: a => a === 'font-family' ? 'Futura,Futura-medium' : '' };

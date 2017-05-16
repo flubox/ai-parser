@@ -1,5 +1,7 @@
 import test from 'ava';
-import {getDeclaration, filterGroupById, getGroupsWithId} from '../src/group';
+import {getDeclaration, 
+// filterGroupById, 
+getGroupsWithId} from '../src/group';
 
 test('getDeclaration', t => {
     const attrs = {
@@ -11,14 +13,14 @@ test('getDeclaration', t => {
     t.is(getDeclaration(element)('font-family'), attrs['font-family']);
 });
 
-test('filterGroupById', t => {
-    const A = {};
-    const B = { id: 'lorem' };
-    const C = { id: 'ipsum' };
-    t.falsy(filterGroupById('hello')(A));
-    t.truthy(filterGroupById('lorem')(B));
-    t.false(filterGroupById('lorem')(C));
-});
+// test('filterGroupById', t => {
+//     const A = {};
+//     const B = { id: 'lorem' };
+//     const C = { id: 'ipsum' };
+//     t.falsy(filterGroupById('hello')(A));
+//     t.truthy(filterGroupById('lorem')(B));
+//     t.false(filterGroupById('lorem')(C));
+// });
 
 test('getGroupsWithId', t => {
     const groups = [
