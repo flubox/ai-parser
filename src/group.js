@@ -1,4 +1,6 @@
-export const filterGroupById = token => g => typeof g.id !== 'undefined' && g.id.indexOf(token) === 0;
+import {unDef} from './helper';
+
+// export const filterGroupById = token => g => unDef(g.id) && g.id.indexOf(token) === 0;
 
 export const getDeclaration = element => attribute => element.getAttribute(attribute);
 
