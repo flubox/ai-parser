@@ -1,30 +1,31 @@
+import {unDef} from './helper';
+
 export const getSub = ({tag, json}) => {
     if (hasSub({tag, json})) {
         const {elements} = json;
-        if (typeof elements === 'undefined') {
+        if (unDef(elements)) {
             return [];
         }
-        return tag ? elements.filter(filterTag(tag)) : elements;
+        return tag ? getTag(elements) : elements;
     }
     return [];
 };
 
+export const getTag = elements => elements.filter(filterTag());
+
 export const hasSub = ({tag, json}) => {
-    if (typeof json === 'undefined') {
+    if (unDef(json)) {
         return false;
     }
 
-    const noTag = typeof tag === 'undefined';
-    const noElements = typeof json.elements === 'undefined';
-
-    if (noTag) {
-        if (noElements) {
+    if (unDef(tag)) {
+        if (unDef(json.elements)) {
             return false;
         } else {
             return true;
         }
     } else {
-        if (noElements) {
+        if (unDef(json.elements)) {
             return false;
         } else {
             return json.elements.length > 0;

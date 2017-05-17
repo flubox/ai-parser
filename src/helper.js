@@ -1,22 +1,24 @@
+export const all = key => value => list => list.every(item => isDef(item[key]) && item[key] === value);
+
+export const allType = value => list => all('type')(value)(list);
+
 export const capitalizeFirstLetter = string => `${string.toUpperCase().substr(0, 1)}${string.toLowerCase().substr(1)}`;
 
 export const concat = (a, b) => a.concat(b);
 
 export const extract = targetName => json => {
     const {name, elements} = json;
-    const noName = typeof name === 'undefined';
-    const noElements = typeof elements === 'undefined';
-    if (!noName && name === targetName) {
+    if (unDef(name) && name === targetName) {
         return [json];
-    } else if (!noElements) {
+    } else if (unDef(elements)) {
         return reduceByConcat(elements.map(extract(targetName)));
     }
     return [];
 };
 
-export const not = a => b => a !== b;
+export const not = a => b => Array.isArray(a) ? !a.includes(b) : a !== b;
 
-export const is = a => b => a === b;
+export const is = a => b => Array.isArray(a) ? a.includes(b) : a === b;
 
 export const convertToUnit = dimension => viewbox => viewport => value => {
     // console.info('convertToUnit', dimension, viewbox, viewport, value, viewport[dimension], viewbox[dimension], `${value} * (${viewport[dimension]} / ${viewbox[dimension]})`);
@@ -37,33 +39,44 @@ export const toUnit = options => data => {
     return {...data, ...converted};
 };
 
-export const extractClipPaths = json => extract('clipPath')(json);
-// export const extractClipPaths = json => {
-//     const {name, elements} = json;
-//     const noName = typeof name === 'undefined';
-//     const noElements = typeof elements === 'undefined';
-//     if (!noName && name === 'clipPath') {
-//         return [json];
-//     } else if (!noElements) {
-//         return reduceByConcat(elements.map(extractSymbols));
-//     }
-//     return [];
-// };
+export const extractClipPaths = json => {
+    const {name, elements} = json;
+    const noName = typeof name === 'undefined';
+    const noElements = typeof elements === 'undefined';
+    if (!noName && name === 'clipPath') {
+        return [json];
+    } else if (!noElements) {
+        return reduceByConcat(elements.map(extractSymbols));
+    }
+    return [];
+};
 
 export const extactIdFromUrl = url => url.match(/url\(#(.+)\)/i);
 
-export const extractSymbols = json => extract('symbol')(json);
-// export const extractSymbols = json => {
-//     const {name, elements} = json;
-//     const noName = typeof name === 'undefined';
-//     const noElements = typeof elements === 'undefined';
-//     if (!noName && name === 'symbol') {
-//         return [json];
-//     } else if (!noElements) {
-//         return reduceByConcat(elements.map(extractSymbols));
-//     }
-//     return [];
-// };
+
+export const extractSymbols = json => {
+    const {name, elements} = json;
+    const noName = typeof name === 'undefined';
+    const noElements = typeof elements === 'undefined';
+    if (!noName && name === 'symbol') {
+        return [json];
+    } else if (!noElements) {
+        return reduceByConcat(elements.map(extractSymbols));
+    }
+    return [];
+};
+
+// export const extractDefs = json => {
+//     const symbols = reduceByMerge(extractSymbols(json).map(s => indexUp(s.attributes.id)(s)));
+//     const clipPath = reduceByMerge(extractClipPaths(json).map(s => indexUp(s.attributes.id)(s)));
+//     const result = {clipPath, symbols};
+//     //     // symbols: reduceByMerge(extractSymbols(json).map(s => indexUp(s.attributes.id)(s))), 
+//     //     symbols: extractSymbols(json), 
+//     //     clipPath: reduceByMerge(extractClipPaths(json).map(s => indexUp(s.attributes.id)(s)))
+//     // };
+//     console.info('...', 'extractDefs', json, 'clipPath', clipPath, 'symbols', symbols);
+//     return result;
+// }
 
 export const extractUnit = size => {
     const match = size.match(/(?:[\.\d]+)([\D]+)/);
@@ -72,10 +85,21 @@ export const extractUnit = size => {
     }
 };
 
-// export const extractUuids = surface => Array.isArray(surface) ? reduceByConcat(surface.map(extractUuids)) : surface.uuid;
+export const getDefaultRotation = data => new Promise(resolve => resolve({...keysExcept(data)('type').reduce(mergeWith(data), {}), rotation: 0}));
+
+export const getText = ({elements}) => isDef(elements) && elements.length === 1 ? filterUndefinedValues({...elements[0], type: undefined}) : undefined;
+
+export const hasId = json => isDef(json.attributes) && isDef(json.attributes.id);
+
+export const hasAttributes = json => isDef(json.attributes);
+
+// export const is = ({tag, json}) => json.name === tag;
+
 export const extractUuids = surface => Array.isArray(surface) ? surface.map(extractUuids) : surface.uuid;
 
 export const extractIds = surface => Array.isArray(surface) ? surface.map(extractIds) : surface.id;
+
+export const extractIdentifiers = debug => surface => debug && hasId(surface) ? extractIds(surface) : extractUuids(surface);
 
 export const filterTag = tag => element => element.name === tag;
 
@@ -87,11 +111,9 @@ export const keysExcept = data => except => keys(data).filter(not(except));
 
 export const reduceByKeys = data => (accumulator, k) => ({...accumulator, [k]: data[k]});
 
-export const filterUndefinedValues = data => isArray(data) ? data.map(filterUndefinedValues) : keys(data || {}).filter(k => !!data[k]).reduce(reduceByKeys(data), {});
+export const filterUndefinedValues = data => isArray(data) ? data.map(filterUndefinedValues) : keys(data || {}).filter(k => isDef(data[k])).reduce(reduceByKeys(data), {});
 
-export const filterEmptySurfaces = data => typeof data.surfaces === 'undefined' ? data : (Object.keys(data.surfaces).length ? data : filterUndefinedValues({...data, surfaces: undefined}));
-
-export const getAttributes = json => json.attributes;
+export const filterEmptySurfaces = data => unDef(data.surfaces) ? data : (Object.keys(data.surfaces).length ? data : filterUndefinedValues({...data, surfaces: undefined}));
 
 export const getSubGroupsWithId = svg => svg.querySelectorAll('g[id]');
 
@@ -107,48 +129,41 @@ export const get = name => obj => isNode(obj) ? obj.querySelectorAll(name) : (ob
 
 export const getSubGroups = obj => get('g')(obj);
 
-export const getColor = json => {
-    return new Promise((resolve, reject) => {
-        if (hasAttributes(json)) {
-            const {fill} = json.attributes;
-            return resolve({fill});
-        }
-        reject();
-    });
-};
+// export const getColor = json => {
+//     return new Promise((resolve, reject) => {
+//         if (hasAttributes(json)) {
+//             const {fill} = json.attributes;
+//             return resolve({fill});
+//         }
+//         reject();
+//     });
+// };
 
-export const getPosition = json => {
-    return new Promise((resolve, reject) => {
-        if (hasAttributes(json)) {
-            const {x, y} = json.attributes;
-            return resolve({x, y});
-        }
-        reject();
-    });
-};
+// export const getPosition = json => {
+//     return new Promise((resolve, reject) => {
+//         if (hasAttributes(json)) {
+//             const {x, y} = json.attributes;
+//             return resolve({x, y});
+//         }
+//         reject();
+//     });
+// };
 
-export const getSize = json => {
-    return new Promise((resolve, reject) => {
-        if (hasAttributes(json)) {
-            const {height, width} = json.attributes;
-            return resolve({height, width});
-        }
-        reject();
-    });
-};
+// export const getSize = json => {
+//     return new Promise((resolve, reject) => {
+//         if (hasAttributes(json)) {
+//             const {height, width} = json.attributes;
+//             return resolve({height, width});
+//         }
+//         reject();
+//     });
+// };
 
 export const getRects = obj => get('rect')(obj);
 
 export const getTexts = obj => get('text')(obj);
 
-export const getUse = ({clipPath}) => ({attributes, elements}) => {
-    if (typeof attributes === 'undefined' || typeof elements === 'undefined') {
-        return undefined;
-    }
-    const merged = reduceByMerge([useClipPath({clipPath})])
-    // console.info('...', 'attributes', {...attributes}, 'elements', [...elements], 'merged', {...merged});
-    return isolate(isolate(elements).elements);
-};
+export const getUse = ({clipPath}) => ({attributes, elements}) => unDef(attributes) || unDef(elements) ? undefined : first(first(elements).elements);
 
 export const indexUp = key => object => ({[object[key] || [key]]: object});
 
@@ -170,7 +185,11 @@ export const encapsulate = (f = a => a) => data => key => ({[key]: f(data[key])}
 
 export const toFloat = data => ({...data, ...keys(data).filter(only(['x', 'y', 'width', 'height'])).map(encapsulate(float)(data)).reduce(merge, {})});
 
-export const isolate = array => array[0];
+export const isDef = item => !unDef(item);
+
+export const unDef = item => typeof item === 'undefined';
+
+export const first = array => array[0];
 
 export const merge = (a, b) => ({...a, ...b });
 
@@ -184,20 +203,9 @@ export const reduceByMerge = list => Array.isArray(list) ? list.reduce(merge, {}
 
 export const resolver = options => (data, f) => f(options)(data);
 
-export const resolveByType = options => resolvers => data => {
-    const result = resolvers.reduce(resolver(options), data);
-    // console.info('...', 'resolveByType', data.type, data.id, resolvers, data, result);
-    return result;
-};
+export const rise = options => resolvers => data => resolvers.reduce(resolver(options), data);
 
-export const riseSurfaces = ({debug}) => data => {
-    if (data.surfaces && data.surfaces.length) {
-        console.info('!!!!!!', 'riseSurfaces', data.surfaces);
-        const uuids = data.surfaces.map(debug ? extractId : extractUuids);
-        return [{...data, surfaces: uuids}].concat(data.surfaces.map(riseSurfaces));
-    }
-    return data;
-};
+export const riseSurfaces = ({debug}) => data => isDef(data.surfaces) ? [{...data, surfaces: data.surfaces.map(extractIdentifiers(debug))}].concat(data.surfaces.map(riseSurfaces)) : data;
 
 export const useClipPath = defs => id => Array.isArray(id) ? reduceByMerge(id.map(useClipPath(defs))) : ({...defs.clipPath[id]});
 
@@ -205,8 +213,12 @@ export const uCase = (start = 0) => (end = 1) => text => text.substr(start, end)
 
 export const lCase = (start = 0) => text => text.substr(start).toLowerCase();
 
-export const camel = text => {
-    const result = `${uCase(0)(1)(text)}${lCase(1)(text)}`;
-    console.info('>>>>>>>>>>', result);
-    return result;
-};
+export const camel = text => `${uCase(0)(1)(text)}${lCase(1)(text)}`;
+
+export const remove = key => data => filterUndefinedValues({...data, [key]: undefined});
+
+export const removeAttributes = data => remove('attributes')(data);
+
+export const removeElements = data => remove('elements')(data);
+
+export const sortByZindex = (a, b) => a.z < b.z ? -1 : 1;

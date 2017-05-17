@@ -1,5 +1,7 @@
 import test from 'ava';
-import {getDeclaration, filterGroupById, getGroupsWithId} from '../src/group';
+import {getDeclaration, 
+// filterGroupById, 
+getGroupsWithId} from '../src/group';
 
 test('getDeclaration', t => {
     const attrs = {

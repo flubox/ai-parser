@@ -78,7 +78,7 @@ export const parseMug = ({svg, json}) => options => {
     .then(surfaces => {
         const sort = (a, b) => a.z_index < b.z_index ? -1 : 1;
         surfaces = surfaces.sort(sort);
-        console.info('...', 'surfaces', surfaces);
+        console.info('...', 'mug', 'surfaces', surfaces);
         return {
             then: resolve => resolve({
                 uuid: uuidV4(),
