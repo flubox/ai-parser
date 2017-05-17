@@ -5,11 +5,11 @@ import md5 from 'blueimp-md5';
 const getAttribute = attribute => rect.attributes[attribute]
 const rect = { attributes: { fill: '#FF9900' }, getAttribute };
 
-test('colors.filterColorById', t => {
-    t.truthy(colors.filterColorById({ id: 'color' }));
-    t.falsy(colors.filterColorById({}));
-    t.falsy(colors.filterColorById({ id: 'lorem' }));
-});
+// test('colors.filterColorById', t => {
+//     t.truthy(colors.filterColorById({ id: 'color' }));
+//     t.falsy(colors.filterColorById({}));
+//     t.falsy(colors.filterColorById({ id: 'lorem' }));
+// });
 
 test('colors.getRgb', t => {
     const color = '#FF9900';
