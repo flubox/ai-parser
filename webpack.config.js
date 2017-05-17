@@ -30,8 +30,6 @@ module.exports = {
     devtool: 'source-map',
     plugins: [
         new BrowserSyncPlugin({
-            // browse to http://localhost:3000/ during development,
-            // ./ directory is being served
             host: 'localhost',
             port: 3000,
             server: {
