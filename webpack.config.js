@@ -1,11 +1,11 @@
 var path = require('path');
 var webpack = require('webpack');
+var BrowserSyncPlugin = require('browser-sync-webpack-plugin');
 
 module.exports = {
-    entry: ['./src/parser.js'],
     entry: {
         index: path.resolve(__dirname, 'src/parser.js'),
-        demo: path.resolve(__dirname, 'src/client.js')
+        client: path.resolve(__dirname, 'src/client.js')
     },
     output: {
         path: path.resolve('dist'),
@@ -27,5 +27,14 @@ module.exports = {
             }
         ]
     },
-    devtool: 'source-map'
+    devtool: 'source-map',
+    plugins: [
+        new BrowserSyncPlugin({
+            host: 'localhost',
+            port: 3000,
+            server: {
+            baseDir: ['./']
+            }
+        })
+    ]
 };
