@@ -16,3 +16,7 @@ export const checkContent = svg => {
     const designs = !!svg.querySelectorAll('g#designs').length;
     return {toolkit, designs};
 };
+
+export const checkIfSvg = json => json.name === 'svg';
+
+export const checkIfHasElements = json => json.elements && json.elements.length;

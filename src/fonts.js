@@ -1,7 +1,9 @@
 import { capitalizeFirstLetter, nodeList2Array } from './helper';
-import { filterGroupById, getDeclaration } from './group';
+import { 
+    // filterGroupById, 
+    getDeclaration } from './group';
 
-export const filterFontsById = g => filterGroupById('fonts')(g);
+// export const filterFontsById = g => filterGroupById('fonts')(g);
 
 export const getFontTypeDeclaration = text => getDeclaration(text)('font-family').split(',');
 
