@@ -1,4 +1,4 @@
-import {filterUndefinedValues, getUse, merge} from './helper';
+import {filterUndefinedValues, getUse, hasAttributes, hasId, isDef, is, merge, unDef} from './helper';
 
 export const adjustType = data => {
     if (data.type === 'rect' && data['data-name'] === 'aperture') {
@@ -11,34 +11,14 @@ export const cleanedElementId = ({attributes}) => attributes.id.split('_').filte
 
 export const extractPhysicalSize = ({width, height}) => ({width, height});
 
-// export const getProductDeclaration = json => {
-//     if (json.attributes && json.attributes.id && json.attributes.id.indexOf('design:') === 0) {
-//         return json.attributes.id.split(':')[1];
-//     } else if (json.elements && json.elements.length === 1) {
-//         return getProductDeclaration(json.elements[0]);
-//     }
-//     return undefined;
-// };
-
 export const getProductGroup = json => {
     return json.elements[0].elements.find(element => element.attributes && element.attributes.id.indexOf('design') > -1);
 };
 
-export const hasId = json => json.attributes && json.attributes.id;
-
-export const hasAttributes = json => !!json.attributes;
-
-export const is = ({tag, json}) => json.name === tag;
-
-export const refineResults = raw => results => {
-    let refined = ({...results.filter(a => !!a).reduce(merge, {})});
-    refined.raw = raw;
-    // console.info('refineResults', raw, results.filter(a => !!a), refined);
-    return refined;
-};
+export const mergeResults = results => ({...results.filter(isDef).reduce(merge, {})});
 
 export const filterSurfaceError = ({debug}) => surface => {
-    if (typeof surface.error !== 'undefined') {
+    if (isDef(surface.error)) {
         if (debug) {
             console.warn(surface.error, {...surface});
         }
@@ -48,7 +28,7 @@ export const filterSurfaceError = ({debug}) => surface => {
 };
 
 export const transformRegexes = [
-    {key: 'translate', regex: /translate\(([\d\.]+)\s?([\d\.]+)?\)/, refine: r => ({x: r[1], y: r[2] || 0})}
+    {key: 'translate', regex: /translate\(([\d\.]+)\s?([\d\.]+)?\)/, refine: r => ({x: parseFloat(r[1]), y: parseFloat(r[2]) || 0})}
 ];
 
 export const getSiblingsCount = svg => topSelector => document.querySelectorAll(`${topSelector}>g`).length;
@@ -56,50 +36,46 @@ export const getSiblingsCount = svg => topSelector => document.querySelectorAll(
 export const getTransform = data => {
     return new Promise((resolve, reject) => {
         let {transform} = data;
-        if (typeof transform === 'undefined') {
+        if (unDef(transform)) {
             resolve(data);
         }
-        const results = transformRegexes.map(r => ({...r, result: transform.match(r.regex)})).filter(r => !!r.result);
+        const results = transformRegexes.map(r => ({...r, result: transform.match(r.regex)})).filter(({result}) => isDef(result));
         if (results.length) {
-            transform = results.reduce((a, b) => ({...a, [b.key]: b.refine(b.result)}), {});
+            transform = results.reduce((a, b) => ({...a, [b.key]: b.refine((b.result))}), {});
         }
         resolve({...data, transform});
     });
 };
 
-export const onlyOneSurface = data => data.surfaces && data.surfaces.length === 1;
+export const onlyOneSurface = data => isDef(data.surfaces) && data.surfaces.length === 1;
 
-// export const mergeRawWithSubRaw = data => data.raw.concat(data.surfaces[0].raw);
 export const mergeRawWithSubRaw = data => [].concat(data.raw, data.surfaces[0].raw);
 
-// export const mergeRectUp = data => {
-//     if (onlyOneSurface(data) && data.surfaces[0].type === 'rect') {
-//         data = filterUndefinedValues({...data, ...data.surfaces[0], surfaces: undefined, raw: mergeRawWithSubRaw(data)});
-//     }
-//     return data;
-// };
+export const firstSurface = ({surfaces}) => surfaces[0];
 
-export const mergeTextUp = options => data => {
-    if (onlyOneSurface(data) && data.surfaces[0].type === 'text') {
-        console.info('...', 'mergeTextUp', data);
-        const {id, type} = data;
-        data = filterUndefinedValues({...data, ...data.surfaces[0], surfaces: undefined, raw: mergeRawWithSubRaw(data), id, type});
+export const filterForMergeUp = data => type => onlyOneSurface(data) && firstSurface(data).type === type;
+
+export const resolveText = options => data => {
+    const isText = data.type === 'text';
+    const oneSurface = onlyOneSurface(data);
+    const surfaceIsText = oneSurface && data.surfaces[0].type === 'text';
+
+    if (isText) {
+        if (surfaceIsText) {
+            data = {...firstSurface(data)};
+        } else if (isDef(data.surfaces)) {
+            data = {...data, text: data.surfaces.map(({text}) => isDef(text) ? text : ' ').join(''), surfaces: undefined};
+        }
     }
+
     return data;
 };
 
-export const mergeUseUp = data => {
-    if (onlyOneSurface(data) && data.surfaces[0].type === 'use') {
-        data = filterUndefinedValues({...data, ...data.surfaces[0], surfaces: undefined, raw: mergeRawWithSubRaw(data)});
-    }
-    return data;
-};
+export const mergeUseUp = data => filterForMergeUp(data)('use') ? filterUndefinedValues({...data, ...firstSurface(data), surfaces: undefined, raw: mergeRawWithSubRaw(data)}) : data;
 
-export const extractSubSurfaces = data => {
-    return data.surfaces && data.surfaces.length ? [{...data, surfaces: data.surfaces.map(s => s.uuid)}].concat(data.surfaces) : data;
-};
+// export const extractSubSurfaces = data => data.surfaces && data.surfaces.length ? [{...data, surfaces: data.surfaces.map(s => s.uuid)}].concat(data.surfaces) : data;
 
-export const hasSymbols = data => typeof data['xlink:href'] !== 'undefined';
+export const hasSymbols = data => isDef(data['xlink:href']);
 
 export const getSymbols = ({symbols}) => data => symbols[getXlinkHref(data).substr(1)];
 

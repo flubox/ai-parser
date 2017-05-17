@@ -4,7 +4,7 @@ import { getFontsFromGroups } from './fonts';
 import { parseImagesFromSVG } from './images';
 import { lookForProductAttributes } from './product';
 import { ACL, Bucket, getLocation, getSvgUploadOptions, mkUrl } from './upload';
-import {getViewBox, merge, nodeList2Array, reduceByConcat} from './helper';
+import {getViewBox, isDef, merge, nodeList2Array, reduceByConcat, unDef} from './helper';
 import {checkMode, checkContent} from './check';
 import {getDeclaration} from './group';
 
@@ -18,7 +18,6 @@ const productsParsers = [
 
 export const legacyColorDeclaration = id => id.match(/COLOR_([\w]+)_([\d]+)?/i);
 export const legacyClipartDeclaration = id => id.match(/CLIPART_([\d]+)?/i);
-// export const designsSelectors = '#designs [id*=design]';
 export const designsSelectors = '#designs';
 
 export const parse = {
@@ -62,7 +61,7 @@ export const parse = {
                         allProductParsers.map(product => {
                             const productName = Object.keys(product)[0];
                             // const {surfaces} = product[productName];
-                            console.info('...', `product[${productName}]`, Object.keys(surfaces).length, surfaces);
+                            console.info('@@@', `product[${productName}]`, Object.keys(surfaces).length, surfaces);
                         })
                         return Promise.resolve({
                             then: resolve => resolve(reduceByConcat(allProductParsers))
@@ -83,7 +82,7 @@ export const parse = {
 export const parser = svg => options => {
     if (typeof svg === 'string') {
         const svgElement = document.querySelector(svg);
-        if (typeof svgElement === 'undefined') {
+        if (unDef(svgElement)) {
             return Promise.reject("Can't find any dom element using selector: " + svg);
         }
         return parser(svgElement)(options);
