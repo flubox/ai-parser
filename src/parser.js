@@ -10,10 +10,11 @@ import {getDeclaration} from './group';
 
 import parserMug from './parserMug';
 import {parseBook, parseBookToDSC} from './parserBook';
+import {parseLayoutSet} from './parserLayoutSet';
 
 const productsParsers = [
     // parserMug,
-    [parseBook, parseBookToDSC]
+    [parseBook, parseBookToDSC],
 ];
 
 export const legacyColorDeclaration = id => id.match(/COLOR_([\w]+)_([\d]+)?/i);
@@ -50,7 +51,7 @@ export const parse = {
             const viewbox = getViewBox(json.elements[0]);
             const viewport = { width: window.innerWidth, height: window.innerHeight };
             options = {...options, viewbox, viewport};
-            console.info('...', 'options', options);
+            console.info('parse design', 'options', options);
 
             Promise.all(
                 json.elements.map(design => {
@@ -76,6 +77,11 @@ export const parse = {
                 });
             })
         });
+    },
+    layouts: svg => options => {
+        const json = JSON.parse(convert.xml2json(svg.outerHTML, {compact: false, spaces: 4}));
+        console.info('parse layouts', 'options', options);
+        return parseLayoutSet({svg, json})(options);
     }
 };
 
@@ -92,7 +98,8 @@ export const parser = svg => options => {
 
     return Promise.all([
         parse.toolkit(svg)(options),
-        parse.designs(svg)(options)
+        parse.designs(svg)(options),
+        parse.layouts(svg)(options)
     ])
     .then(values => values.reduce(merge, {}));
 };

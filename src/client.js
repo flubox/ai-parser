@@ -173,6 +173,7 @@ window.svgParserClient = domElement => endpoints => {
                     parser(document.querySelector(`#${loaderId} svg`))(options).then(parsed => {
                         // const {book} = parsed.designs[0];
                         // const {surfaces} = book;
+                        console.info('###', 'parsed', parsed);
                         // console.info('###', 'surfaces', {...surfaces.inner_01});
                         // console.info('###', 'surfaces', {...parsed.designs[0].book});
                         const filterErrors = key => key !== 'error';
