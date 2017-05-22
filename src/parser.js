@@ -10,7 +10,7 @@ import {getDeclaration} from './group';
 
 import parserMug from './parserMug';
 import {parseBook, parseBookToDSC} from './parserBook';
-import {parseLayoutSet} from './parserLayoutSet';
+import {parseLayoutSet, layoutSetToDS} from './layoutSet';
 
 const productsParsers = [
     // parserMug,
@@ -51,7 +51,6 @@ export const parse = {
             const viewbox = getViewBox(json.elements[0]);
             const viewport = { width: window.innerWidth, height: window.innerHeight };
             options = {...options, viewbox, viewport};
-            console.info('parse design', 'options', options);
 
             Promise.all(
                 json.elements.map(design => {
@@ -80,8 +79,11 @@ export const parse = {
     },
     layouts: svg => options => {
         const json = JSON.parse(convert.xml2json(svg.outerHTML, {compact: false, spaces: 4}));
-        console.info('parse layouts', 'options', options);
-        return parseLayoutSet({svg, json})(options);
+        return parseLayoutSet({svg, json})(options)
+        .then(({layoutSet}) => {
+            const result = layoutSetToDS(layoutSet)(options);
+            return Promise.resolve(result);
+        });
     }
 };
 

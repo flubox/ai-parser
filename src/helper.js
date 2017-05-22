@@ -1,3 +1,13 @@
+import md5 from 'blueimp-md5';
+const uuidV4 = require('uuid/v4');
+export const addUuid = data => ({...data, uuid: uuidV4()});
+export const addHash = keys => data => {
+    if (unDef(data.hash)) {
+        const hash = md5(Object.keys(data).filter(k => !keys.includes(k)).reduce(merge, {}));
+        return ({...data, hash});
+    }
+    return data;
+}
 export const all = key => value => list => list.every(item => isDef(item[key]) && item[key] === value);
 export const allType = value => list => all('type')(value)(list);
 export const camel = text => `${uCase(0)(1)(text)}${lCase(1)(text)}`;
@@ -13,8 +23,6 @@ export const extract = targetName => json => {
     }
     return [];
 };
-export const not = a => b => Array.isArray(a) ? !a.includes(b) : a !== b;
-export const is = a => b => Array.isArray(a) ? a.includes(b) : a === b;
 // export const convertToUnit = dimension => viewbox => viewport => value => {
 //     if (viewbox[dimension] === 0) {
 //         return value;
@@ -77,6 +85,7 @@ export const hasAttributes = json => isDef(json.attributes);
 export const isArray = data => Array.isArray(data);
 export const keys = data => Object.keys(data || {});
 export const keysExcept = data => except => keys(data).filter(not(except));
+export const keysOnly = data => selected => keys(data).filter(only(selected));
 export const lCase = (start = 0) => text => text.substr(start).toLowerCase();
 export const reduceByKeys = data => (accumulator, k) => ({...accumulator, [k]: data[k]});
 export const get = name => obj => isNode(obj) ? obj.querySelectorAll(name) : (obj.elements ? filterElementsByName(name)(obj) : undefined);
@@ -95,18 +104,22 @@ export const getViewBox = json => {
     }
     return false;
 };
-export const indexUp = key => object => ({[object[key] || [key]]: object});
-export const isNode = obj => obj instanceof Node;
-export const matchName = name => element => element.name === name;
-export const named = value => data => data.name === value;
-export const only = keys => key => keys.includes(key);
 export const isDef = item => !unDef(item);
-export const unDef = item => typeof item === 'undefined';
+export const indexUp = key => object => ({[object[key] || [key]]: object});
+export const is = a => b => Array.isArray(a) ? a.includes(b) : a === b;
+export const isNode = obj => obj instanceof Node;
+export const isTitle = data => named('title')(data) && isDef(data.elements) && data.elements.length === 1;
+export const matchName = name => element => element.name === name;
 export const merge = (a, b) => ({...a, ...b });
 export const mergeWith = data => (accumulator, key) => ({...accumulator, [key]: data[key]});
+export const named = value => data => data.name === value;
 export const nodeList2Array = nodeList => [].slice.call(nodeList);
+export const not = a => b => Array.isArray(a) ? !a.includes(b) : a !== b;
+export const only = keys => key => keys.includes(key);
+export const unDef = item => typeof item === 'undefined';
 export const reduceByConcat = list => Array.isArray(list) ? list.reduce(concat, []) : list;
 export const reduceByMerge = list => Array.isArray(list) ? list.reduce(merge, {}) : list;
+export const removeUnit = unit => data => data.replace(unit, '');
 export const resolver = options => (data, f) => f(options)(data);
 export const rise = options => resolvers => data => resolvers.reduce(resolver(options), data);
 export const riseSurfaces = ({debug}) => data => isDef(data.surfaces) ? [{...data, surfaces: data.surfaces.map(extractIdentifiers(debug))}].concat(data.surfaces.map(riseSurfaces)) : data;

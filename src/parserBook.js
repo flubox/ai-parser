@@ -136,7 +136,7 @@ export const getProductGroup = ({elements}) => elements[0].elements.find(e => he
 
 export const parseBook = ({svg, json}) => options => {
     options = {...options, debug: false, flat: options.flat || false};
-    console.info('...', 'options', options, 'json', json);
+    // console.info('...', 'options', options, 'json', json);
     const {width, height} = extractPhysicalSize(json.elements[0].attributes);
     const unit = helper.extractUnit(width || height);
     const symbols = helper.reduceByMerge(helper.extractSymbols(json).map(s => helper.indexUp(s.attributes.id)(s)));
