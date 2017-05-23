@@ -14,6 +14,8 @@ export const camel = text => `${uCase(0)(1)(text)}${lCase(1)(text)}`;
 export const capitalizeFirstLetter = string => `${string.toUpperCase().substr(0, 1)}${string.toLowerCase().substr(1)}`;
 export const clean = data => Object.keys(data).reduce((all, k) => shouldAdd(data[k]) ? ({...all, [k]: data[k]}) : all, {});
 export const concat = (a, b) => a.concat(b);
+export const encapsulate = key => data => ({[key]: data});
+export const encapsulateViaFunction = (f = a => a) => data => key => ({[key]: f(data[key])});
 export const extract = targetName => json => {
     const {name, elements} = json;
     if (unDef(name) && name === targetName) {
@@ -68,7 +70,6 @@ export const extractUnit = size => {
         return match[1];
     }
 };
-export const encapsulate = (f = a => a) => data => key => ({[key]: f(data[key])});
 export const extractUuids = surface => Array.isArray(surface) ? surface.map(extractUuids) : surface.uuid;
 export const extractIds = surface => Array.isArray(surface) ? surface.map(extractIds) : surface.id;
 export const extractIdentifiers = debug => surface => debug && hasId(surface) ? extractIds(surface) : extractUuids(surface);
@@ -130,4 +131,4 @@ export const shouldAdd = data => isDef(data);
 export const sortByZindex = (a, b) => a.z < b.z ? -1 : 1;
 export const useClipPath = defs => id => Array.isArray(id) ? reduceByMerge(id.map(useClipPath(defs))) : ({...defs.clipPath[id]});
 export const uCase = (start = 0) => (end = 1) => text => text.substr(start, end).toUpperCase;
-export const toFloat = data => ({...data, ...keys(data).filter(only(['x', 'y', 'width', 'height'])).map(encapsulate(float)(data)).reduce(merge, {})});
+export const toFloat = data => ({...data, ...keys(data).filter(only(['x', 'y', 'width', 'height'])).map(encapsulateViaFunction(float)(data)).reduce(merge, {})});

@@ -2,8 +2,6 @@ import * as helper from './helper';
 import {extractPhysicalSize, mergeResults} from './surfaces';
 import {getProductDeclaration} from './product';
 
-export const encapsulate = key => data => ({[key]: data});
-
 export const extractTransform = data => {
     if (helper.isDef(data.attributes) && helper.isDef(data.attributes.transform) && typeof data.attributes.transform === 'string') {
         const match = data.attributes.transform.match(/(translate)\(([\d\.]+)\s([\d\.]+)\)/)
