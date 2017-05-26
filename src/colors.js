@@ -38,5 +38,5 @@ export const getColorsFromRects = rects => ({hashFunction, hashMethod}) => {
             return { colorType, rgb };
         })
         .reduce((a, b) => a.concat(b.colorType.length ? b.colorType.map(colorType => ({...b, colorType })) : b), [])
-        .map(color => useHashFunction ? { hash: hashMethod, [hashMethod]: hashFunction(JSON.stringify(color)), ...color } : color);
+        .map(color => useHashFunction ? { hashKeys: Object.keys(color).sort(), hashMethod, hash: hashFunction(JSON.stringify(color)), ...color } : color);
 };

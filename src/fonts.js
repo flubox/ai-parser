@@ -1,9 +1,6 @@
 import { capitalizeFirstLetter, nodeList2Array } from './helper';
-import { 
-    // filterGroupById, 
-    getDeclaration } from './group';
-
-// export const filterFontsById = g => filterGroupById('fonts')(g);
+import { getDeclaration } from './group';
+import {hashForFont} from './hash';
 
 export const getFontTypeDeclaration = text => getDeclaration(text)('font-family').split(',');
 
@@ -16,14 +13,14 @@ export const getDisplayName = rawFontData => Array.isArray(rawFontData) ? rawFon
 export const getFontsFromGroups = texts => ({hashFunction, hashMethod}) => {
     const useHashFunction = typeof hashFunction === 'function';
     return texts.map(text => {
-            const rawFontTypeDeclaration = getFontTypeDeclaration(text);
-            const fontName = capitalizeFirstLetter(getFontName(rawFontTypeDeclaration));
-            return {
-                displayName: capitalizeFirstLetter(getDisplayName(rawFontTypeDeclaration)),
-                fontName,
-                id: fontName,
-                name: capitalizeFirstLetter(getName(rawFontTypeDeclaration))
-            };
-        })
-        .map(font => useHashFunction ? {...font, hash: hashMethod, [hashMethod]: hashFunction(JSON.stringify(font)) } : font);
+        const rawFontTypeDeclaration = getFontTypeDeclaration(text);
+        const fontName = capitalizeFirstLetter(getFontName(rawFontTypeDeclaration));
+        return {
+            displayName: capitalizeFirstLetter(getDisplayName(rawFontTypeDeclaration)),
+            fontName,
+            id: fontName,
+            name: capitalizeFirstLetter(getName(rawFontTypeDeclaration))
+        };
+    })
+    .map(font => useHashFunction ? {...font, hashKeys: Object.keys(font).sort(), hashMethod, hash: hashFunction(JSON.stringify(font)) } : font);
 };

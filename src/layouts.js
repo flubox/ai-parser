@@ -1,5 +1,6 @@
+import convert from 'xml-js';
 import * as helper from './helper';
-import {extractPhysicalSize, mergeResults} from './surfaces';
+import {extractPhysicalSize, mergeWithoutUndef} from './surfaces';
 import {getProductDeclaration} from './product';
 
 export const extractTransform = data => {
@@ -58,7 +59,8 @@ export const parseLayout = options => json => {
 
 export const subGroups = ({elements}) => elements;
 
-export const parseLayoutSet = ({svg, json}) => options => {
+export const parseLayoutSet = svg => options => {
+    const json = JSON.parse(convert.xml2json(svg.outerHTML, {compact: false, spaces: 4}));
     const firstGroup = helper.first(json.elements);
     const {width, height} = extractPhysicalSize(firstGroup.attributes);
     const unit = helper.extractUnit(width || height);
@@ -67,7 +69,7 @@ export const parseLayoutSet = ({svg, json}) => options => {
     return new Promise((resolve, reject) => {
         const productDetected = getProductDeclaration(json);
         if (productDetected !== 'layouts') {
-            return reject({error: 'this is not a layout'});
+            return reject({error: 'this is not a layout set'});
         }
 
         Promise.all(subGroups(firstGroup).map(parseLayout(options)))
@@ -115,12 +117,12 @@ export const layoutToDS = options => layout => {
     });
 };
 
-export const layoutSetToDS = data => options => {
+export const layoutSetToDS = options => ({layoutSet}) => {
     return new Promise((resolve, reject) => {
-        if (helper.unDef(data)) {
-            return reject({error: 'no data provided'});
+        if (helper.unDef(layoutSet)) {
+            return reject({error: 'no layoutSet provided'});
         }
-        const {layouts} = data;
+        const {layouts} = layoutSet;
         if (helper.unDef(layouts)) {
             return reject({error: 'no layouts provided'});
         }

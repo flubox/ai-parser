@@ -71,6 +71,7 @@ export const extractUnit = size => {
     }
 };
 export const extractUuids = surface => Array.isArray(surface) ? surface.map(extractUuids) : surface.uuid;
+export const extractPhysicalSize = ({width, height}) => ({width, height});
 export const extractIds = surface => Array.isArray(surface) ? surface.map(extractIds) : surface.id;
 export const extractIdentifiers = debug => surface => debug && hasId(surface) ? extractIds(surface) : extractUuids(surface);
 export const filterTag = tag => element => element.name === tag;
@@ -79,8 +80,23 @@ export const filterEmptySurfaces = data => unDef(data.surfaces) ? data : (Object
 export const filterElementsByName = name => obj => obj.elements.filter(matchName);
 export const float = value => parseFloat(value);
 export const first = array => array[0];
-export const getDefaultRotation = data => new Promise(resolve => resolve({...keysExcept(data)('type').reduce(mergeWith(data), {}), rotation: 0}));
+// export const getDefaultRotation = data => new Promise(resolve => resolve({...keysExcept(data)('type').reduce(mergeWith(data), {}), rotation: 0}));
+export const getDefaultRotation = () => new Promise(resolve => resolve({rotation: 0}));
+export const getSiblingsCount = svg => topSelector => document.querySelectorAll(`${topSelector}>g`).length;
 export const getText = ({elements}) => isDef(elements) && elements.length === 1 ? filterUndefinedValues({...elements[0], type: undefined}) : undefined;
+export const getTransform = data => {
+    return new Promise((resolve, reject) => {
+        let {transform} = data;
+        if (unDef(transform)) {
+            resolve(false);
+        }
+        const results = transformRegexes.map(r => ({...r, result: transform.match(r.regex)})).filter(({result}) => isDef(result));
+        if (results.length) {
+            transform = results.reduce((a, b) => ({...a, [b.key]: b.refine((b.result))}), {});
+        }
+        resolve({transform});
+    });
+};
 export const hasId = json => isDef(json.attributes) && isDef(json.attributes.id);
 export const hasAttributes = json => isDef(json.attributes);
 export const isArray = data => Array.isArray(data);
@@ -96,15 +112,15 @@ export const getTypeFromId = id => id.split(/[-_]/)[0];
 export const getRects = obj => get('rect')(obj);
 export const getTexts = obj => get('text')(obj);
 export const getUse = ({clipPath}) => ({attributes, elements}) => unDef(attributes) || unDef(elements) ? undefined : first(first(elements).elements);
-export const getViewBox = json => {
-    if (json && json.attributes && json.attributes.viewBox) {
-        const {viewBox} = json.attributes;
-        const matched = viewBox.match(/([\d\.]+)+/g);
-        const keys = ['x', 'y', 'width', 'height'];
-        return matched.reduce((accumulator, value, index) => ({...accumulator, [keys[index]]: parseFloat(value)}), {});
-    }
-    return false;
-};
+// export const getViewBox = json => {
+//     if (json && json.attributes && json.attributes.viewBox) {
+//         const {viewBox} = json.attributes;
+//         const matched = viewBox.match(/([\d\.]+)+/g);
+//         const keys = ['x', 'y', 'width', 'height'];
+//         return matched.reduce((accumulator, value, index) => ({...accumulator, [keys[index]]: parseFloat(value)}), {});
+//     }
+//     return false;
+// };
 export const isDef = item => !unDef(item);
 export const indexUp = key => object => ({[object[key] || [key]]: object});
 export const is = a => b => Array.isArray(a) ? a.includes(b) : a === b;
@@ -113,20 +129,17 @@ export const isTitle = data => named('title')(data) && isDef(data.elements) && d
 export const matchName = name => element => element.name === name;
 export const merge = (a, b) => ({...a, ...b });
 export const mergeWith = data => (accumulator, key) => ({...accumulator, [key]: data[key]});
+export const mergeWithoutUndef = results => ({...results.filter(isDef).reduce(merge, {})});
 export const named = value => data => data.name === value;
 export const nodeList2Array = nodeList => [].slice.call(nodeList);
 export const not = a => b => Array.isArray(a) ? !a.includes(b) : a !== b;
 export const only = keys => key => keys.includes(key);
+export const onlyOneSurface = data => isDef(data.surfaces) && data.surfaces.length === 1;
 export const unDef = item => typeof item === 'undefined';
 export const reduceByConcat = list => Array.isArray(list) ? list.reduce(concat, []) : list;
 export const reduceByMerge = list => Array.isArray(list) ? list.reduce(merge, {}) : list;
-export const removeUnit = unit => data => data.replace(unit, '');
 export const resolver = options => (data, f) => f(options)(data);
-export const rise = options => resolvers => data => resolvers.reduce(resolver(options), data);
-export const riseSurfaces = ({debug}) => data => isDef(data.surfaces) ? [{...data, surfaces: data.surfaces.map(extractIdentifiers(debug))}].concat(data.surfaces.map(riseSurfaces)) : data;
-export const remove = key => data => filterUndefinedValues({...data, [key]: undefined});
-export const removeAttributes = data => remove('attributes')(data);
-export const removeElements = data => remove('elements')(data);
+export const solve = options => resolvers => data => resolvers.reduce(resolver(options), data);
 export const shouldAdd = data => isDef(data);
 export const sortByZindex = (a, b) => a.z < b.z ? -1 : 1;
 export const useClipPath = defs => id => Array.isArray(id) ? reduceByMerge(id.map(useClipPath(defs))) : ({...defs.clipPath[id]});

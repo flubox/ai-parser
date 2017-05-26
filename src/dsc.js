@@ -6,8 +6,6 @@ export const makeDscValues = obj => keys => keys.map(k => ({dsc: {[k.split('_')[
 
 export const mergeDscValues = values => values.reduce(merge, {});
 
-export const removeDscKey = list => k => !list.includes(k);
-
 export const typeToUppercase = data => unDef(data.type) ? data : ({...data, type: data.type.toUpperCase()});
 
 export const camelCaseType = data => unDef(data.type) ? data : ({...data, type: camel(data.type)});

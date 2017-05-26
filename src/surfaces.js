@@ -7,15 +7,11 @@ export const adjustType = data => {
     return data;
 };
 
-export const cleanedElementId = ({attributes}) => attributes.id.split('_').filter(isNaN).slice(0, 3);
-
 export const extractPhysicalSize = ({width, height}) => ({width, height});
 
 export const getProductGroup = json => {
     return json.elements[0].elements.find(element => element.attributes && element.attributes.id.indexOf('design') > -1);
 };
-
-export const mergeResults = results => ({...results.filter(isDef).reduce(merge, {})});
 
 export const filterSurfaceError = ({debug}) => surface => {
     if (isDef(surface.error)) {
@@ -49,8 +45,6 @@ export const getTransform = data => {
 
 export const onlyOneSurface = data => isDef(data.surfaces) && data.surfaces.length === 1;
 
-export const mergeRawWithSubRaw = data => [].concat(data.raw, data.surfaces[0].raw);
-
 export const firstSurface = ({surfaces}) => surfaces[0];
 
 export const filterForMergeUp = data => type => onlyOneSurface(data) && firstSurface(data).type === type;
@@ -71,7 +65,7 @@ export const resolveText = options => data => {
     return data;
 };
 
-export const mergeUseUp = data => filterForMergeUp(data)('use') ? filterUndefinedValues({...data, ...firstSurface(data), surfaces: undefined, raw: mergeRawWithSubRaw(data)}) : data;
+export const mergeUseUp = data => filterForMergeUp(data)('use') ? filterUndefinedValues({...data, ...firstSurface(data), surfaces: undefined}) : data;
 
 // export const extractSubSurfaces = data => data.surfaces && data.surfaces.length ? [{...data, surfaces: data.surfaces.map(s => s.uuid)}].concat(data.surfaces) : data;
 
