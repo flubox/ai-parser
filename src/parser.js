@@ -6,7 +6,6 @@ import convert from 'xml-js';
 // import { ACL, Bucket, getLocation, getSvgUploadOptions, mkUrl } from './upload';
 // import {getViewBox, isDef, merge, nodeList2Array, reduceByConcat, unDef} from './helper';
 import {isDef, merge} from './helper';
-// import {checkMode, checkContent} from './check';
 // import {getDeclaration} from './group';
 
 // import parserMug from './parserMug';

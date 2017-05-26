@@ -1,15 +1,4 @@
 import {getGroupsWithId} from './group';
-import {legacyClipartDeclaration, legacyColorDeclaration} from './parser';
-
-export const checkMode = groups => {
-    const groupsWithId = getGroupsWithId(groups);
-    const hasLegacyColorDeclaration = groupsWithId.some(g => legacyColorDeclaration(g.id));
-    const hasLegacyClipartDeclaration = groupsWithId.some(g => legacyClipartDeclaration(g.id));
-    if (hasLegacyColorDeclaration && hasLegacyColorDeclaration) {
-        return 'legacy';
-    }
-    return 'flu';
-};
 
 export const checkContent = svg => {
     const toolkit = !!svg.querySelectorAll('g#toolkit').length;
