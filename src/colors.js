@@ -1,4 +1,4 @@
-import { capitalizeFirstLetter, getDeclaration, nodeList2Array } from './helper';
+import { capitalizeFirstLetter, getDeclaration, merge, nodeList2Array } from './helper';
 import convertCssColorNameToHex from 'convert-css-color-name-to-hex';
 
 export const getRgb = color => color.indexOf('#') === 0 ? color.replace(/#/g, '') : getRgb(convertCssColorNameToHex(color));
