@@ -5,7 +5,7 @@ import { getColorsFromRects } from './colors';
 import { getFontsFromGroups } from './fonts';
 import { parseImagesFromSVG } from './images';
 
-export const extractId = ({attributes}) => isDef(attributes) && isDef(attributes.id) && attributes.id.match(/^toolkit_(.+)/)[1];
+export const extractId = ({attributes}) => isDef(attributes) && isDef(attributes.id) && attributes.id.match(/^toolkit_(?:default_)(.+)/)[1];
 
 export const parseToolkit = options => svg => {
     const { filename, S3, hashFunction, hashMethod } = options;
