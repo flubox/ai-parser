@@ -1,7 +1,5 @@
 import { capitalizeFirstLetter, nodeList2Array } from './helper';
-import { getDeclaration, 
-// filterGroupById, 
-getGroupsWithId } from './group';
+import { getDeclaration} from './group';
 import convertCssColorNameToHex from 'convert-css-color-name-to-hex';
 
 // export const filterColorById = g => filterGroupById('color')(g);

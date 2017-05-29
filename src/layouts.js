@@ -1,6 +1,6 @@
 import convert from 'xml-js';
 import * as helper from './helper';
-import {extractPhysicalSize, mergeWithoutUndef} from './surfaces';
+import {extractPhysicalSize, mergeWithoutUndef} from './helper';
 import {getProductDeclaration} from './product';
 
 export const extractTransform = data => {

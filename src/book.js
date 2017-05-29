@@ -1,21 +1,6 @@
 const uuidV4 = require('uuid/v4');
 import * as helper from './helper';
 import {allType, concat, is, isDef, keys, merge, not, onlyOneSurface, unDef, sortByZindex} from './helper';
-import {checkIfHasElements, checkIfSvg} from './check';
-// import {
-//     adjustType,
-//     extractPhysicalSize,
-//     // extractSubelements,
-//     filterSurfaceError,
-//     getSiblingsCount,
-//     getTransform,
-//     resolveText,
-//     mergeWithoutUndef,
-//     resolveUse
-// } from './elements';
-// import {surfaceToDsc} from './dsc';
-import {getSub, hasSub} from './sub';
-// import {byId, extractIndexFromInnerId, getInnerCount, isCover, isInner, isSpine, resolveAperture, resolveRect} from './book';
 import {getProductDeclaration} from './product';
 
 export const isAutofillable = context => isDef(context) && context.indexOf('autofillable') > -1;
@@ -155,7 +140,6 @@ export const parseFunctionsStack = [
     () => extractElements,
     () => getType,
     getZIndex,
-    // getSubSurface,
     () => helper.getDefaultRotation,
     // () => helper.getText,
     // getPosition,
