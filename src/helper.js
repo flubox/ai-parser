@@ -111,34 +111,10 @@ export const getTexts = obj => get('text')(obj);
 export const getUse = ({clipPath}) => ({attributes, elements}) => unDef(attributes) || unDef(elements) ? undefined : first(first(elements).elements);
 export const isDef = item => !unDef(item);
 export const indexUp = key => object => ({[object[key] || [key]]: object});
-<<<<<<< HEAD
-
-export const getViewBox = json => {
-    if (json && json.attributes && json.attributes.viewBox) {
-        const {viewBox} = json.attributes;
-        const matched = viewBox.match(/([\d\.]+)+/g);
-        const keys = ['x', 'y', 'width', 'height'];
-        return matched.reduce((accumulator, value, index) => ({...accumulator, [keys[index]]: parseFloat(value)}), {});
-    }
-    return false;
-};
-
-export const float = value => parseFloat(value);
-
-export const only = keys => key => keys.includes(key);
-
-export const encapsulate = (f = a => a) => data => key => ({[key]: f(data[key])});
-
-export const toFloat = data => ({...data, ...keys(data).filter(only(['x', 'y', 'width', 'height'])).map(encapsulate(float)(data)).reduce(merge, {})});
-
-export const isolate = array => array[0];
-
-=======
 export const is = a => b => Array.isArray(a) ? a.includes(b) : a === b;
 export const isNode = obj => obj instanceof Node;
 export const isTitle = data => named('title')(data) && isDef(data.elements) && data.elements.length === 1;
 export const matchName = name => element => element.name === name;
->>>>>>> origin/dev
 export const merge = (a, b) => ({...a, ...b });
 export const mergeWith = data => (accumulator, key) => ({...accumulator, [key]: data[key]});
 export const mergeWithoutUndef = results => ({...results.filter(isDef).reduce(merge, {})});
