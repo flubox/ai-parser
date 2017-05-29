@@ -55,7 +55,7 @@ window.svgParserClient = domElement => endpoints => {
                         toolkit: toolkit => {
                             console.info('####', 'toolkit', {...toolkit });
                             const tmpPreview = document.createElement('embed');
-                            tmpPreview.setAttribute('src', toolkit.urlThumb);
+                            tmpPreview.setAttribute('src', toolkit.thumbUrl);
                             tmpPreview.style.width = '50%';
                             document.querySelector(`#${loaderId} svg`).outerHTML = tmpPreview.outerHTML;
 
@@ -115,8 +115,55 @@ window.svgParserClient = domElement => endpoints => {
                             containerEl.appendChild(panelEl);
                             document.querySelector(`#${infoId}`).appendChild(containerEl);
                         },
-                        designs: designs => {
+                        designs: design => {
+                            console.info('<<<', 'designs', designs);
+                            const containerEl = document.createElement('div');
+                            containerEl.setAttribute('class', 'mui-container-fluid');
+                            const panelEl = document.createElement('div');
+                            panelEl.setAttribute('class', 'mui-panel');
+                            const titleEl = document.createElement('h2');
+                            titleEl.textContent = `designs`;
+                            panelEl.appendChild(titleEl);
 
+                            // const toHtml = parent => content => {
+                            //     console.info('..........', 'content', content);
+                            //     const tmpPanel = document.createElement('div');
+                            //     tmpPanel.setAttribute('class', 'mui-panel');
+                            //     tmpPanel.setAttribute('id', content.uuid);
+                            //     const tmpTitle = document.createElement('h3');
+                            //     tmpTitle.textContent = content.type;
+
+                            //     tmpPanel.appendChild(tmpTitle);
+                            //     parent.appendChild(tmpPanel);
+
+                            //     if (content.surfaces) {
+                            //         content.surfaces
+                            //         .map(toHtml(document.querySelector(`[id=${content.uuid}]`)))
+                            //         .(html => parent.appendChild(html));
+                            //     }
+                            // };
+
+                            Object.keys(design).forEach(product => {
+                                console.info('####', 'product', product);
+                                const productElement = document.createElement('div');
+                                productElement.setAttribute('class', 'mui-panel');
+                                const productTitle = document.createElement('h3');
+                                productTitle.textContent = product;
+
+                                console.info('<<<', product, design[product].surfaces);
+
+                                // Object.keys(design[product].surfaces).forEach(k => design[product].surfaces[k]).map(console.info);
+                                for (const id in design[product].surfaces) {
+                                    // console.info('.........', 'id', id, design[product].surfaces[id]);
+                                    // toHtml(productElement)(design[product].surfaces[id]);
+                                }
+
+                                productElement.appendChild(productTitle);
+                                panelEl.appendChild(productElement);
+                            });
+
+                            containerEl.appendChild(panelEl);
+                            document.querySelector(`#${infoId}`).appendChild(containerEl);
                         },
                         errors: error => {
                             console.error(error);
@@ -124,10 +171,14 @@ window.svgParserClient = domElement => endpoints => {
                     }
 
                     parser(document.querySelector(`#${loaderId} svg`))(options).then(parsed => {
-                        console.info('###', 'parsed', parsed);
-                        Object.keys(parsed).filter(a => {
-                            return Array.isArray(parsed[a]) ? !!parsed[a].length : !!Object.keys(parsed[a]).length;
-                        }).map(key => {
+                        // const {book} = parsed.designs[0];
+                        // const {surfaces} = book;
+                        // console.info('###', 'surfaces', {...surfaces.inner_01});
+                        // console.info('###', 'surfaces', {...parsed.designs[0].book});
+                        const filterErrors = key => key !== 'error';
+                        const filterEmpty = parsed => key => Array.isArray(parsed[key]) ? !!parsed[key].length : !!Object.keys(parsed[key]).length;
+                        Object.keys(parsed).filter(filterErrors).filter(filterEmpty(parsed)).map(key => {
+                            console.info('...', `parsed[${key}]`, parsed[key], typeof onParsed[key]);
                             return Array.isArray(parsed[key]) ? parsed[key].map(onParsed[key]) : onParsed[key](parsed[key])
                         } );
                     });

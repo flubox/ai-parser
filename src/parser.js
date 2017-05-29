@@ -4,18 +4,27 @@ import { getFontsFromGroups } from './fonts';
 import { parseImagesFromSVG } from './images';
 import { lookForProductAttributes } from './product';
 import { ACL, Bucket, getLocation, getSvgUploadOptions, mkUrl } from './upload';
-import {merge, nodeList2Array} from './helper';
+import {getViewBox, merge, nodeList2Array, reduceByConcat} from './helper';
 import {checkMode, checkContent} from './check';
 import {getDeclaration} from './group';
 
+import parserMug from './parserMug';
+import {parseBook, parseBookToDSC} from './parserBook';
+
+const productsParsers = [
+    // parserMug,
+    [parseBook, parseBookToDSC]
+];
+
 export const legacyColorDeclaration = id => id.match(/COLOR_([\w]+)_([\d]+)?/i);
 export const legacyClipartDeclaration = id => id.match(/CLIPART_([\d]+)?/i);
+// export const designsSelectors = '#designs [id*=design]';
+export const designsSelectors = '#designs';
 
 export const parse = {
     toolkit: svg => options => {
         const { filename, S3, hashFunction, hashMethod } = options;
         const groups = nodeList2Array(svg.querySelectorAll('g#toolkit g'));
-        console.info('...', 'groups', groups);
         if (groups.length === 0) {
             const errors = [{msg: 'TOOLKIT NOT PARSABLE : no matching toolkit attributes found'}];
             return Promise.resolve({then: resolve => resolve({toolkit: false, errors})});
@@ -36,40 +45,57 @@ export const parse = {
         });
     },
     designs: svg => options => {
-      return new Promise((resolve, reject) => {
-          const designChecked = lookForProductAttributes(svg);
-          const product = Object.keys(designChecked).find(key => designChecked[key]);
-          console.info('###', 'designChecked', designChecked, 'product', product);
-          const productFound = !!product && !!Object.keys(product).length;
-          console.info('...', 'designChecked', designChecked, 'productFound', productFound, 'product', product);
-          if (!productFound) {
-              const errors = [{msg: 'DESIGN NOT PARSABLE : no matching product attributes found'}];
-              return resolve({designs: false, errors});
-          }
-          resolve({designs: []});
-      });
+        return new Promise((resolve, reject) => {
+            const designs = nodeList2Array(document.querySelectorAll(designsSelectors));
+            const json = JSON.parse(convert.xml2json(svg.outerHTML, {compact: false, spaces: 4}));
+            const viewbox = getViewBox(json.elements[0]);
+            const viewport = { width: window.innerWidth, height: window.innerHeight };
+            options = {...options, viewbox, viewport};
+            console.info('...', 'options', options);
+
+            Promise.all(
+                json.elements.map(design => {
+                    return Promise.all(
+                        productsParsers.map(productsParser => productsParser[0]({json})({...options}).then(productsParser[1]({...options, viewbox})))
+                    )
+                    .then(allProductParsers => {
+                        allProductParsers.map(product => {
+                            const productName = Object.keys(product)[0];
+                            // const {surfaces} = product[productName];
+                            console.info('...', `product[${productName}]`, Object.keys(surfaces).length, surfaces);
+                        })
+                        return Promise.resolve({
+                            then: resolve => resolve(reduceByConcat(allProductParsers))
+                        });
+                    })
+                    .catch(error => resolve(error));
+                })
+            )
+            .then(designsParsed => {
+                resolve({
+                    then: resolve => resolve({designs: reduceByConcat(designsParsed)})
+                });
+            })
+        });
     }
 };
 
 export const parser = svg => options => {
     if (typeof svg === 'string') {
-        const svgElement = document.createElement('div');
-        svgElement.innerHtml = svg;
+        const svgElement = document.querySelector(svg);
+        if (typeof svgElement === 'undefined') {
+            return Promise.reject("Can't find any dom element using selector: " + svg);
+        }
         return parser(svgElement)(options);
     }
 
     const { filename, S3, hashFunction, hashMethod } = options;
 
     return Promise.all([
-        new Promise((resolve, reject) => S3.upload(getSvgUploadOptions(urlThumbPath)(svg.outerHTML)).promise().then(getLocation).then(urlThumb => resolve({ urlThumb }))),
-        Promise.resolve({ colors: getColorsFromRects(colorsGroup)({hashFunction, hashMethod}) }),
-        Promise.resolve({ fonts: getFontsFromGroups(fontsGroup)({hashFunction, hashMethod}) }),
-        new Promise((resolve, reject) => parseImagesFromSVG(filename)(svg)(S3)({hashFunction, hashMethod}).then(images => resolve({ images }))),
-    ]).then(values => values.reduce(merge,
-    {
-        id: filename,
-        title: svg.querySelector('title').textContent
-    }));
+        parse.toolkit(svg)(options),
+        parse.designs(svg)(options)
+    ])
+    .then(values => values.reduce(merge, {}));
 };
 
 export default parser;

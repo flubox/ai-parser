@@ -1,5 +1,212 @@
 export const capitalizeFirstLetter = string => `${string.toUpperCase().substr(0, 1)}${string.toLowerCase().substr(1)}`;
 
-export const nodeList2Array = nodeList => [].slice.call(nodeList);
+export const concat = (a, b) => a.concat(b);
+
+export const extract = targetName => json => {
+    const {name, elements} = json;
+    const noName = typeof name === 'undefined';
+    const noElements = typeof elements === 'undefined';
+    if (!noName && name === targetName) {
+        return [json];
+    } else if (!noElements) {
+        return reduceByConcat(elements.map(extract(targetName)));
+    }
+    return [];
+};
+
+export const not = a => b => a !== b;
+
+export const is = a => b => a === b;
+
+export const convertToUnit = dimension => viewbox => viewport => value => {
+    // console.info('convertToUnit', dimension, viewbox, viewport, value, viewport[dimension], viewbox[dimension], `${value} * (${viewport[dimension]} / ${viewbox[dimension]})`);
+    if (viewbox[dimension] === 0) {
+        return value;
+    } 
+    return viewport[dimension] === 0 ? value : value * (viewport[dimension] / viewbox[dimension]);
+};
+
+export const toUnit = options => data => {
+    // if (data.type === 'rect') console.info('\n', data.type, data);
+    const {viewbox, viewport} = options;
+    const converted = keys(data).filter(only(['x', 'y', 'width', 'height'])).reduce((accumulator, k) => {
+        const dimension = ['x', 'width'].includes(k) ? 'width' : 'height';
+        // if (data.type === 'rect') console.info('toUnit', k, `dimension:${dimension}`, data[k] === 0, data[k], convertToUnit(dimension)(viewbox)(viewport)(data[k]));
+        return {...accumulator, [k]: data[k] === 0 ? data[k] : convertToUnit(dimension)(viewbox)(viewport)(data[k])};
+    }, {});
+    return {...data, ...converted};
+};
+
+export const extractClipPaths = json => extract('clipPath')(json);
+// export const extractClipPaths = json => {
+//     const {name, elements} = json;
+//     const noName = typeof name === 'undefined';
+//     const noElements = typeof elements === 'undefined';
+//     if (!noName && name === 'clipPath') {
+//         return [json];
+//     } else if (!noElements) {
+//         return reduceByConcat(elements.map(extractSymbols));
+//     }
+//     return [];
+// };
+
+export const extactIdFromUrl = url => url.match(/url\(#(.+)\)/i);
+
+export const extractSymbols = json => extract('symbol')(json);
+// export const extractSymbols = json => {
+//     const {name, elements} = json;
+//     const noName = typeof name === 'undefined';
+//     const noElements = typeof elements === 'undefined';
+//     if (!noName && name === 'symbol') {
+//         return [json];
+//     } else if (!noElements) {
+//         return reduceByConcat(elements.map(extractSymbols));
+//     }
+//     return [];
+// };
+
+export const extractUnit = size => {
+    const match = size.match(/(?:[\.\d]+)([\D]+)/);
+    if (match) {
+        return match[1];
+    }
+};
+
+// export const extractUuids = surface => Array.isArray(surface) ? reduceByConcat(surface.map(extractUuids)) : surface.uuid;
+export const extractUuids = surface => Array.isArray(surface) ? surface.map(extractUuids) : surface.uuid;
+
+export const extractIds = surface => Array.isArray(surface) ? surface.map(extractIds) : surface.id;
+
+export const filterTag = tag => element => element.name === tag;
+
+export const isArray = data => Array.isArray(data);
+
+export const keys = data => Object.keys(data || {});
+
+export const keysExcept = data => except => keys(data).filter(not(except));
+
+export const reduceByKeys = data => (accumulator, k) => ({...accumulator, [k]: data[k]});
+
+export const filterUndefinedValues = data => isArray(data) ? data.map(filterUndefinedValues) : keys(data || {}).filter(k => !!data[k]).reduce(reduceByKeys(data), {});
+
+export const filterEmptySurfaces = data => typeof data.surfaces === 'undefined' ? data : (Object.keys(data.surfaces).length ? data : filterUndefinedValues({...data, surfaces: undefined}));
+
+export const getAttributes = json => json.attributes;
+
+export const getSubGroupsWithId = svg => svg.querySelectorAll('g[id]');
+
+export const getTypeFromId = id => id.split(/[-_]/)[0];
+
+export const matchName = name => element => element.name === name;
+
+export const isNode = obj => obj instanceof Node;
+
+export const filterElementsByName = name => obj => obj.elements.filter(matchName);
+
+export const get = name => obj => isNode(obj) ? obj.querySelectorAll(name) : (obj.elements ? filterElementsByName(name)(obj) : undefined);
+
+export const getSubGroups = obj => get('g')(obj);
+
+export const getColor = json => {
+    return new Promise((resolve, reject) => {
+        if (hasAttributes(json)) {
+            const {fill} = json.attributes;
+            return resolve({fill});
+        }
+        reject();
+    });
+};
+
+export const getPosition = json => {
+    return new Promise((resolve, reject) => {
+        if (hasAttributes(json)) {
+            const {x, y} = json.attributes;
+            return resolve({x, y});
+        }
+        reject();
+    });
+};
+
+export const getSize = json => {
+    return new Promise((resolve, reject) => {
+        if (hasAttributes(json)) {
+            const {height, width} = json.attributes;
+            return resolve({height, width});
+        }
+        reject();
+    });
+};
+
+export const getRects = obj => get('rect')(obj);
+
+export const getTexts = obj => get('text')(obj);
+
+export const getUse = ({clipPath}) => ({attributes, elements}) => {
+    if (typeof attributes === 'undefined' || typeof elements === 'undefined') {
+        return undefined;
+    }
+    const merged = reduceByMerge([useClipPath({clipPath})])
+    // console.info('...', 'attributes', {...attributes}, 'elements', [...elements], 'merged', {...merged});
+    return isolate(isolate(elements).elements);
+};
+
+export const indexUp = key => object => ({[object[key] || [key]]: object});
+
+export const getViewBox = json => {
+    if (json && json.attributes && json.attributes.viewBox) {
+        const {viewBox} = json.attributes;
+        const matched = viewBox.match(/([\d\.]+)+/g);
+        const keys = ['x', 'y', 'width', 'height'];
+        return matched.reduce((accumulator, value, index) => ({...accumulator, [keys[index]]: parseFloat(value)}), {});
+    }
+    return false;
+};
+
+export const float = value => parseFloat(value);
+
+export const only = keys => key => keys.includes(key);
+
+export const encapsulate = (f = a => a) => data => key => ({[key]: f(data[key])});
+
+export const toFloat = data => ({...data, ...keys(data).filter(only(['x', 'y', 'width', 'height'])).map(encapsulate(float)(data)).reduce(merge, {})});
+
+export const isolate = array => array[0];
 
 export const merge = (a, b) => ({...a, ...b });
+
+export const mergeWith = data => (accumulator, key) => ({...accumulator, [key]: data[key]});
+
+export const nodeList2Array = nodeList => [].slice.call(nodeList);
+
+export const reduceByConcat = list => Array.isArray(list) ? list.reduce(concat, []) : list;
+
+export const reduceByMerge = list => Array.isArray(list) ? list.reduce(merge, {}) : list;
+
+export const resolver = options => (data, f) => f(options)(data);
+
+export const resolveByType = options => resolvers => data => {
+    const result = resolvers.reduce(resolver(options), data);
+    // console.info('...', 'resolveByType', data.type, data.id, resolvers, data, result);
+    return result;
+};
+
+export const riseSurfaces = ({debug}) => data => {
+    if (data.surfaces && data.surfaces.length) {
+        console.info('!!!!!!', 'riseSurfaces', data.surfaces);
+        const uuids = data.surfaces.map(debug ? extractId : extractUuids);
+        return [{...data, surfaces: uuids}].concat(data.surfaces.map(riseSurfaces));
+    }
+    return data;
+};
+
+export const useClipPath = defs => id => Array.isArray(id) ? reduceByMerge(id.map(useClipPath(defs))) : ({...defs.clipPath[id]});
+
+export const uCase = (start = 0) => (end = 1) => text => text.substr(start, end).toUpperCase;
+
+export const lCase = (start = 0) => text => text.substr(start).toLowerCase();
+
+export const camel = text => {
+    const result = `${uCase(0)(1)(text)}${lCase(1)(text)}`;
+    console.info('>>>>>>>>>>', result);
+    return result;
+};
