@@ -21,13 +21,3 @@ test('fonts.getDisplayName', t => {
     const rawFontData = "Futura-medium,Futura";
     t.is(fonts.getDisplayName(rawFontData), "Futura");
 });
-
-// test('fonts.getFontsFromGroups', t => {
-//     t.deepEqual(fonts.getFontsFromGroups([
-//         { id: 'font', getAttribute: () => 'futura-medium,futura' },
-//         { id: 'font', getAttribute: () => 'Arial,Arial' }
-//     ])({hashMethod: 'md5', hashFunction: md5}), [
-//         { displayName: 'Futura', fontName: 'Futura-medium' , id: 'Futura-medium', name: 'Futura'},
-//         { displayName: 'Arial', fontName: 'Arial', id: 'Arial', name: 'Arial' }
-//     ].map(each => ({...each, hash: { keys: Object.keys(each), method: 'md5', value: md5(JSON.stringify(each)) } })));
-// });
