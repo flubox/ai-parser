@@ -9,7 +9,7 @@ export const getName = rawFontData => Array.isArray(rawFontData) ? rawFontData[1
 
 export const getDisplayName = rawFontData => Array.isArray(rawFontData) ? rawFontData[1].trim() : getDisplayName(rawFontData.split(',').map(a => a.trim()));
 
-export const getFontsFromGroups = texts => ({hashFunction, hashMethod}) => {
+export const getFontsFromGroups = texts => ({hashFunction, method}) => {
     const useHashFunction = typeof hashFunction === 'function';
     return texts.map(text => {
         const rawFontTypeDeclaration = getFontTypeDeclaration(text);
@@ -21,5 +21,14 @@ export const getFontsFromGroups = texts => ({hashFunction, hashMethod}) => {
             name: capitalizeFirstLetter(getName(rawFontTypeDeclaration))
         };
     })
-    .map(font => useHashFunction ? {...font, hashKeys: Object.keys(font).sort(), hashMethod, hash: hashFunction(JSON.stringify(font)) } : font);
+    .map(
+        font => useHashFunction ? {
+            ...font,
+            hash: {
+                keys: Object.keys(font).sort,
+                method,
+                value: hashFunction(JSON.stringify(Object.keys(font).sort().reduce(merge, {})))
+            }
+        } : font
+    );
 };
