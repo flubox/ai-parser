@@ -12,7 +12,7 @@ export const parseToolkit = options => svg => {
     return new Promise((resolve, reject) => {
         const json = JSON.parse(convert.xml2json(svg.outerHTML, {compact: false, spaces: 4})).elements[0];
         const id = extractId(json);
-        const useDefaultToolkit = !!id.match(/default/);
+        const useDefaultToolkit = !!json.attributes.id.match(/(?:default_)/);
         const colorsGroup = nodeList2Array(svg.querySelectorAll('#colors rect'));
         const fontsGroup = nodeList2Array(svg.querySelectorAll('#fonts text'));
         const urlThumbPath = `${filename}/${filename.replace('.svg', '.thumb.svg')}`;
