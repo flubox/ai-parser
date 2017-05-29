@@ -49,46 +49,6 @@ export const extractClipPaths = json => {
     }
     return [];
 };
-<<<<<<< HEAD
-
-export const not = a => b => a !== b;
-
-export const is = a => b => a === b;
-
-export const convertToUnit = dimension => viewbox => viewport => value => {
-    // console.info('convertToUnit', dimension, viewbox, viewport, value, viewport[dimension], viewbox[dimension], `${value} * (${viewport[dimension]} / ${viewbox[dimension]})`);
-    if (viewbox[dimension] === 0) {
-        return value;
-    } 
-    return viewport[dimension] === 0 ? value : value * (viewport[dimension] / viewbox[dimension]);
-};
-
-export const toUnit = options => data => {
-    // if (data.type === 'rect') console.info('\n', data.type, data);
-    const {viewbox, viewport} = options;
-    const converted = keys(data).filter(only(['x', 'y', 'width', 'height'])).reduce((accumulator, k) => {
-        const dimension = ['x', 'width'].includes(k) ? 'width' : 'height';
-        // if (data.type === 'rect') console.info('toUnit', k, `dimension:${dimension}`, data[k] === 0, data[k], convertToUnit(dimension)(viewbox)(viewport)(data[k]));
-        return {...accumulator, [k]: data[k] === 0 ? data[k] : convertToUnit(dimension)(viewbox)(viewport)(data[k])};
-    }, {});
-    return {...data, ...converted};
-};
-
-export const extractClipPaths = json => extract('clipPath')(json);
-// export const extractClipPaths = json => {
-//     const {name, elements} = json;
-//     const noName = typeof name === 'undefined';
-//     const noElements = typeof elements === 'undefined';
-//     if (!noName && name === 'clipPath') {
-//         return [json];
-//     } else if (!noElements) {
-//         return reduceByConcat(elements.map(extractSymbols));
-//     }
-//     return [];
-// };
-
-=======
->>>>>>> feat-layoutSets
 export const extactIdFromUrl = url => url.match(/url\(#(.+)\)/i);
 export const extractSymbols = json => {
     const {name, elements} = json;
