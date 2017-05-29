@@ -101,72 +101,6 @@ export const resolveText = options => data => {
     return data;
 };
 
-// export const getSubSurface = ({options, json}) => {
-//     return new Promise((resolve, reject) => {
-//         if (unDef(json)) {
-//             reject();
-//         } else if (hasSub({options, json})) {
-//             const has_attributes = helper.hasAttributes(json);
-//             Promise.all(
-//                 json.elements.map(json => parseNodeToSurface({options, json}))
-//             )
-//             .then(elements => resolve({elements: elements.filter(filterParsingErrors(options)).filter(helper.filterUndefinedValues)}));
-//         } else {
-//             // reject({then: resolve => resolve()});
-//             // resolve({error: 'no sub elements'});
-//             resolve();
-//         }
-//     });
-// };
-
-// export const parseNodeToSurface = ({options, json}) => {
-//     const mergeRules = [
-//         resolveAperture,
-//         // resolveUse,
-//         resolveRect,
-//         resolveText
-//     ];
-//     return new Promise((resolve, reject) => {
-//         const has_id = helper.hasId(json);
-//         if (has_id && isDeprecated(json.attributes.id)) {
-//             resolve({error: 'deprecated'});
-//         }
-//         Promise.all([
-//             Promise.resolve({
-//                 ...json.attributes,
-//                 attributes: undefined,
-//                 product: 'book',
-//                 uuid: uuidV4(),
-//                 raw: {...json}
-//             }),
-//             getType(json),//.catch(resolveFromError),
-//             getZIndex({options, json}),
-//             getSubSurface({options, json}),
-//             helper.getDefaultRotation(json),
-//             helper.getText(json),
-//             // getPosition(json).catch(resolveFromError),
-//             // getSize(json).catch(resolveFromError),
-//             // getColor(json).catch(resolveFromError),
-//             // getTransform(json).catch(resolveFromError)
-//         ])
-//         .then(helper.mergeWithoutUndef)
-//         .then(helper.filterUndefinedValues)
-//         .then(helper.filterEmptyelements)
-//         .then(helper.getTransform)
-//         .then(helper.solve(options)(mergeRules))
-//         .then(helper.toFloat)
-//         .then(data => {
-
-//             // if (Array.isArray(data)) {
-//             // if (data.type === 'text') {
-//             //     console.info('<<<', 'data', data);
-//             // }
-
-//             resolve({then: resolve => resolve(data)});
-//         });
-//     });
-// };
-
 export const addUuid = () => new Promise(resolve => resolve({uuid: uuidV4()}));
 
 export const addProduct = () => new Promise(resolve => resolve({product: 'book'}));
@@ -276,6 +210,7 @@ export const parseBook = ({svg, json}) => options => {
         const bookDesign = getProductGroup(json);
         const productDetected = getProductDeclaration(bookDesign);
         if (productDetected !== 'book') {
+            console.warn('...........', 'productDetected', productDetected);
             return reject({error: 'design is not a book'});
         }
         const innerCount = helper.getSiblingsCount(svg)('[id*=design]');
@@ -404,17 +339,21 @@ export const toDscFunctionStack = [
 ];
 
 export const parseBookToDSC = options => data => {
+    console.info('parseBookToDSC', data);
     return new Promise((resolve, reject) => {
+        if (unDef(data)) {
+            return reject({error: 'no parsed data found'});
+        }
         const productDeclaration = helper.first(Object.keys(data));
         const product = data[productDeclaration];
         console.warn('before', 'parseBookToDSC', 'options', options, 'product', product, 'data[productDeclaration]', data[productDeclaration]);
         const {elements} = data[productDeclaration];
         Promise.all(toDscFunctionStack.map(f => f(options)(elements)))
-        .then(data => {
-            return data.concat(
+        // .then(data => {
+        //     return data.concat(
                 
-                );
-        })
+        //         );
+        // })
         .then(converted => converted.reduce(merge, {}))
         .then(data => ({...data, ...seekPagesRepeatables(data)}))
         .then(book => {

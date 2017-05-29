@@ -5,7 +5,7 @@ import convert from 'xml-js';
 // import { lookForProductAttributes } from './product';
 // import { ACL, Bucket, getLocation, getSvgUploadOptions, mkUrl } from './upload';
 // import {getViewBox, isDef, merge, nodeList2Array, reduceByConcat, unDef} from './helper';
-import {isDef, merge} from './helper';
+import {defaultCatchHandling, isDef, merge} from './helper';
 // import {getDeclaration} from './group';
 
 // import parserMug from './parserMug';
@@ -23,21 +23,9 @@ import {parseDesigns} from './design';
 // export const legacyClipartDeclaration = id => id.match(/CLIPART_([\d]+)?/i);
 export const designsSelectors = '#designs';
 
-export const defaultErrorHandling = key => ({error}) => {
-    console.error(error);
-    return Promise.resolve({then: resolve => resolve({[key]: false})});
-};
-
-export const defaultsWarningHandling = key => ({warning}) => {
-    console.warn(warning);
-    return Promise.resolve({then: resolve => resolve({[key]: false})});
-};
-
-export const defaultCatchHandling = key => ({error, warning}) => isDef(error) ? defaultErrorHandling({error}) : defaultsWarningHandling({warning});
-
 export const parse = {
-    toolkits: svg => options => parseToolkits(svg)(options).catch(msg => defaultCatchHandling('toolkits')),
-    designs: svg => options => parseDesigns(svg)(options).catch(msg => defaultCatchHandling('designs')),
+    toolkits: svg => options => parseToolkits(svg)(options).catch(defaultCatchHandling('toolkits')),
+    designs: svg => options => parseDesigns(svg)(options).catch(defaultCatchHandling('designs')),
     // designs: svg => options => {
     //     return new Promise((resolve, reject) => {
     //         const designs = nodeList2Array(document.querySelectorAll(designsSelectors));
@@ -71,7 +59,7 @@ export const parse = {
     //         })
     //     });
     // },
-    layouts: svg => options => parseLayoutSet(svg)(options).then(layoutSetToDS(options)).catch(msg => defaultCatchHandling('layouts'))
+    layouts: svg => options => parseLayoutSet(svg)(options).then(layoutSetToDS(options)).catch(defaultCatchHandling('layouts'))
 };
 
 export const parser = svg => options => {

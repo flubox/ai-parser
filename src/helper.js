@@ -14,6 +14,19 @@ export const camel = text => `${uCase(0)(1)(text)}${lCase(1)(text)}`;
 export const capitalizeFirstLetter = string => `${string.toUpperCase().substr(0, 1)}${string.toLowerCase().substr(1)}`;
 export const clean = data => Object.keys(data).reduce((all, k) => shouldAdd(data[k]) ? ({...all, [k]: data[k]}) : all, {});
 export const concat = (a, b) => a.concat(b);
+
+export const defaultErrorHandling = key => ({error}) => {
+    console.error(error);
+    return Promise.resolve({then: resolve => resolve({[key]: false})});
+};
+
+export const defaultsWarningHandling = key => ({warning}) => {
+    console.warn(warning);
+    return Promise.resolve({then: resolve => resolve({[key]: false})});
+};
+
+export const defaultCatchHandling = key => ({error, warning}) => isDef(error) ? defaultErrorHandling({error}) : defaultsWarningHandling({warning});
+
 export const encapsulate = key => data => ({[key]: data});
 export const encapsulateViaFunction = (f = a => a) => data => key => ({[key]: f(data[key])});
 export const extract = targetName => json => {
