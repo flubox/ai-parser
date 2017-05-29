@@ -1,10 +1,5 @@
-import { capitalizeFirstLetter, nodeList2Array } from './helper';
-import { getDeclaration, 
-// filterGroupById, 
-getGroupsWithId } from './group';
+import { capitalizeFirstLetter, getDeclaration, nodeList2Array } from './helper';
 import convertCssColorNameToHex from 'convert-css-color-name-to-hex';
-
-// export const filterColorById = g => filterGroupById('color')(g);
 
 export const getRgb = color => color.indexOf('#') === 0 ? color.replace(/#/g, '') : getRgb(convertCssColorNameToHex(color));
 
@@ -38,5 +33,5 @@ export const getColorsFromRects = rects => ({hashFunction, hashMethod}) => {
             return { colorType, rgb };
         })
         .reduce((a, b) => a.concat(b.colorType.length ? b.colorType.map(colorType => ({...b, colorType })) : b), [])
-        .map(color => useHashFunction ? { hash: hashMethod, [hashMethod]: hashFunction(JSON.stringify(color)), ...color } : color);
+        .map(color => useHashFunction ? { hashKeys: Object.keys(color).sort(), hashMethod, hash: hashFunction(JSON.stringify(color)), ...color } : color);
 };
