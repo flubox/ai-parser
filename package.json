@@ -5,7 +5,6 @@
   "main": "dist/parser.js",
   "author": "François Lunette",
   "scripts": {
-    "install": "npm run dist",
     "dist": "webpack",
     "dev": "webpack --watch",
     "test": "./node_modules/.bin/ava --verbose",
