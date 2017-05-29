@@ -1,5 +1,4 @@
-import { capitalizeFirstLetter, nodeList2Array } from './helper';
-import { getDeclaration } from './group';
+import { capitalizeFirstLetter, getDeclaration, nodeList2Array } from './helper';
 import {hashForFont} from './hash';
 
 export const getFontTypeDeclaration = text => getDeclaration(text)('font-family').split(',');

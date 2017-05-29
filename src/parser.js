@@ -1,65 +1,16 @@
 import convert from 'xml-js';
-// import { getColorsFromRects } from './colors';
-// import { getFontsFromGroups } from './fonts';
-// import { parseImagesFromSVG } from './images';
-// import { lookForProductAttributes } from './product';
-// import { ACL, Bucket, getLocation, getSvgUploadOptions, mkUrl } from './upload';
-// import {getViewBox, isDef, merge, nodeList2Array, reduceByConcat, unDef} from './helper';
-import {defaultCatchHandling, isDef, merge} from './helper';
-// import {getDeclaration} from './group';
+import {defaultCatchHandling, merge} from './helper';
 
-// import parserMug from './parserMug';
-// import {parseBook, parseBookToDSC} from './book';
-import {parseLayoutSet, layoutSetToDS} from './layouts';
+// import {parseLayoutSet, layoutSetToDS} from './layouts';
 import {parseToolkits} from './toolkit';
-import {parseDesigns} from './design';
+// import {parseDesigns} from './design';
 
-// const productsParsers = [
-//     // parserMug,
-//     [parseBook, parseBookToDSC],
-// ];
-
-// export const legacyColorDeclaration = id => id.match(/COLOR_([\w]+)_([\d]+)?/i);
-// export const legacyClipartDeclaration = id => id.match(/CLIPART_([\d]+)?/i);
 export const designsSelectors = '#designs';
 
 export const parse = {
     toolkits: svg => options => parseToolkits(svg)(options).catch(defaultCatchHandling('toolkits')),
-    designs: svg => options => parseDesigns(svg)(options).catch(defaultCatchHandling('designs')),
-    // designs: svg => options => {
-    //     return new Promise((resolve, reject) => {
-    //         const designs = nodeList2Array(document.querySelectorAll(designsSelectors));
-    //         const json = JSON.parse(convert.xml2json(svg.outerHTML, {compact: false, spaces: 4}));
-    //         const viewbox = getViewBox(json.elements[0]);
-    //         const viewport = { width: window.innerWidth, height: window.innerHeight };
-    //         options = {...options, viewbox, viewport};
-
-    //         Promise.all(
-    //             json.elements.map(design => {
-    //                 return Promise.all(
-    //                     productsParsers.map(productsParser => productsParser[0]({json})({...options}).then(productsParser[1]({...options, viewbox})))
-    //                 )
-    //                 .then(allProductParsers => {
-    //                     allProductParsers.map(product => {
-    //                         const productName = Object.keys(product)[0];
-    //                         // const {surfaces} = product[productName];
-    //                         console.info('@@@', `product[${productName}]`, Object.keys(surfaces).length, surfaces);
-    //                     })
-    //                     return Promise.resolve({
-    //                         then: resolve => resolve(reduceByConcat(allProductParsers))
-    //                     });
-    //                 })
-    //                 .catch(error => resolve(error));
-    //             })
-    //         )
-    //         .then(designsParsed => {
-    //             resolve({
-    //                 then: resolve => resolve({designs: reduceByConcat(designsParsed)})
-    //             });
-    //         })
-    //     });
-    // },
-    layouts: svg => options => parseLayoutSet(svg)(options).then(layoutSetToDS(options)).catch(defaultCatchHandling('layouts'))
+    // designs: svg => options => parseDesigns(svg)(options).catch(defaultCatchHandling('designs')),
+    // layouts: svg => options => parseLayoutSet(svg)(options).then(layoutSetToDS(options)).catch(defaultCatchHandling('layouts'))
 };
 
 export const parser = svg => options => {
@@ -73,8 +24,8 @@ export const parser = svg => options => {
 
     return Promise.all([
         parse.toolkits(svg)(options),
-        parse.designs(svg)(options),
-        parse.layouts(svg)(options)
+        // parse.designs(svg)(options),
+        // parse.layouts(svg)(options)
     ])
     .then(values => values.reduce(merge, {}))
     ;

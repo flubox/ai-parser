@@ -38,22 +38,6 @@ export const extract = targetName => json => {
     }
     return [];
 };
-// export const convertToUnit = dimension => viewbox => viewport => value => {
-//     if (viewbox[dimension] === 0) {
-//         return value;
-//     } 
-//     return viewport[dimension] === 0 ? value : value * (viewport[dimension] / viewbox[dimension]);
-// };
-// export const toUnit = options => data => {
-//     // if (data.type === 'rect') console.info('\n', data.type, data);
-//     const {viewbox, viewport} = options;
-//     const converted = keys(data).filter(only(['x', 'y', 'width', 'height'])).reduce((accumulator, k) => {
-//         const dimension = ['x', 'width'].includes(k) ? 'width' : 'height';
-//         // if (data.type === 'rect') console.info('toUnit', k, `dimension:${dimension}`, data[k] === 0, data[k], convertToUnit(dimension)(viewbox)(viewport)(data[k]));
-//         return {...accumulator, [k]: data[k] === 0 ? data[k] : convertToUnit(dimension)(viewbox)(viewport)(data[k])};
-//     }, {});
-//     return {...data, ...converted};
-// };
 export const extractClipPaths = json => {
     const {name, elements} = json;
     const noName = typeof name === 'undefined';
@@ -93,7 +77,7 @@ export const filterEmptySurfaces = data => unDef(data.surfaces) ? data : (Object
 export const filterElementsByName = name => obj => obj.elements.filter(matchName);
 export const float = value => parseFloat(value);
 export const first = array => array[0];
-// export const getDefaultRotation = data => new Promise(resolve => resolve({...keysExcept(data)('type').reduce(mergeWith(data), {}), rotation: 0}));
+export const getDeclaration = element => attribute => element.getAttribute(attribute);
 export const getDefaultRotation = () => new Promise(resolve => resolve({rotation: 0}));
 export const getSiblingsCount = svg => topSelector => document.querySelectorAll(`${topSelector}>g`).length;
 export const getText = ({elements}) => isDef(elements) && elements.length === 1 ? filterUndefinedValues({...elements[0], type: undefined}) : undefined;
@@ -125,15 +109,6 @@ export const getTypeFromId = id => id.split(/[-_]/)[0];
 export const getRects = obj => get('rect')(obj);
 export const getTexts = obj => get('text')(obj);
 export const getUse = ({clipPath}) => ({attributes, elements}) => unDef(attributes) || unDef(elements) ? undefined : first(first(elements).elements);
-// export const getViewBox = json => {
-//     if (json && json.attributes && json.attributes.viewBox) {
-//         const {viewBox} = json.attributes;
-//         const matched = viewBox.match(/([\d\.]+)+/g);
-//         const keys = ['x', 'y', 'width', 'height'];
-//         return matched.reduce((accumulator, value, index) => ({...accumulator, [keys[index]]: parseFloat(value)}), {});
-//     }
-//     return false;
-// };
 export const isDef = item => !unDef(item);
 export const indexUp = key => object => ({[object[key] || [key]]: object});
 export const is = a => b => Array.isArray(a) ? a.includes(b) : a === b;

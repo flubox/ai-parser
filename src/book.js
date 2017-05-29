@@ -3,30 +3,20 @@ import * as helper from './helper';
 import {allType, concat, is, isDef, keys, merge, not, onlyOneSurface, unDef, sortByZindex} from './helper';
 import {getProductDeclaration} from './product';
 
+//WIP
+
 export const isAutofillable = context => isDef(context) && context.indexOf('autofillable') > -1;
-
 export const isBack = context => isDef(context) && context.indexOf('back') > -1;
-
 export const isCover = context => isDef(context) && context.indexOf('cover') > -1;
-
 export const isFront = context => isDef(context) && context.indexOf('front') > -1;
-
 export const isFrontOrBack = context => isFront(id) || isBack(id);
-
 export const isSpine = context => isDef(context) && context.indexOf('spine') > -1;
-
 export const isInner = context => isDef(context) && context.indexOf('inner') > -1;
-
 export const isInside = context => isDef(context) && context.indexOf('inside') > -1;
-
 export const byId = {isCover, isFront, isFrontOrBack, isSpine, isInner};
-
 export const isDeprecated = id => id && id.indexOf('_autofillable') > -1 && id.indexOf('inner') === 0;
-
 export const extractIndexFromInnerId = id => id.match(/inner_(\d+)/);
-
 export const filterDeprecatedElement = element => isDeprecated(element.attributes.id);
-
 export const resolveFromError = e => Promise.resolve(e);
 
 export const resolveAperture = options => data => {
@@ -87,11 +77,8 @@ export const resolveText = options => data => {
 };
 
 export const addUuid = () => new Promise(resolve => resolve({uuid: uuidV4()}));
-
 export const addProduct = () => new Promise(resolve => resolve({product: 'book'}));
-
 export const extractAttributes = data => new Promise(resolve => resolve(isDef(data.attributes) ? {...data.attributes} : false));
-
 export const extractElements = data => new Promise(resolve => resolve(isDef(data.elements) ? {elements: data.elements} : false));
 
 export const getType = ({attributes, name, type}) => {
@@ -141,18 +128,12 @@ export const parseFunctionsStack = [
     () => getType,
     getZIndex,
     () => helper.getDefaultRotation,
-    // () => helper.getText,
-    // getPosition,
-    // getSize,
-    // getColor,
-    // () => data => 
     () => helper.getTransform
 ];
 
 export const parsePage = options => json => {
     const mergeRules = [
         resolveAperture,
-        // resolveUse,
         resolveRect,
         resolveText
     ];
@@ -160,7 +141,6 @@ export const parsePage = options => json => {
         Promise.all(parseFunctionsStack.map(funk => funk(options)(json)))
         .then(data => data.filter(a => !!a))
         .then(helper.mergeWithoutUndef)
-        // .then(helper.filterEmptyelements)
         .then(helper.solve(options)(mergeRules))
         .then(helper.toFloat)
         .then(data => {
@@ -186,7 +166,6 @@ export const filterParsingErrors = ({debug}) => surface => {
 
 export const parseBook = ({svg, json}) => options => {
     options = {...options, debug: false, flat: options.flat || false};
-    // console.info('...', 'options', options, 'json', json);
     return new Promise((resolve, reject) => {
         const {defs} = options;
         options.debug = false;
@@ -194,7 +173,6 @@ export const parseBook = ({svg, json}) => options => {
         const bookDesign = getProductGroup(json);
         const productDetected = getProductDeclaration(bookDesign);
         if (productDetected !== 'book') {
-            console.warn('...........', 'productDetected', productDetected);
             return reject({error: 'design is not a book'});
         }
         const innerCount = helper.getSiblingsCount(svg)('[id*=design]');
@@ -224,7 +202,6 @@ export const seekId = options => data => {
 };
 
 export const filterInner = data => Object.keys(data.elements).filter(k => isInner(data.elements[k])).reduce(merge, {...data});
-
 export const seekName = ({filename}) => data => new Promise(resolve => resolve({name: filename.replace(/\.svg$/i, '')}));
 
 export const seekToolkitIds = options => data => {
@@ -232,9 +209,7 @@ export const seekToolkitIds = options => data => {
 };
 
 export const splitId = token => id => id.split(token);
-
 export const fragmentId = id => splitId('_')(id).map(s => s.toUpperCase()).map(v => isNaN(v) ? v : parseInt(v));
-
 export const hasPageNumber = idFragment => idFragment.some(v => !isNaN(v));
 
 export const makePageDescId = element => {
@@ -285,7 +260,6 @@ export const pageDescsFunctionStack = [
 
 export const seekPagesDescs = options => elements => {
     elements = Object.keys(elements).map(k => elements[k]);
-    console.info('seekPagesDescs', elements);
     const elementKey = element => Object.keys(element)[0];
     return new Promise(resolve => {
         return Promise.all(elements.map(element => {
@@ -323,27 +297,17 @@ export const toDscFunctionStack = [
 ];
 
 export const parseBookToDSC = options => data => {
-    console.info('parseBookToDSC', data);
     return new Promise((resolve, reject) => {
         if (unDef(data)) {
             return reject({error: 'no parsed data found'});
         }
         const productDeclaration = helper.first(Object.keys(data));
         const product = data[productDeclaration];
-        console.warn('before', 'parseBookToDSC', 'options', options, 'product', product, 'data[productDeclaration]', data[productDeclaration]);
         const {elements} = data[productDeclaration];
         Promise.all(toDscFunctionStack.map(f => f(options)(elements)))
-        // .then(data => {
-        //     return data.concat(
-                
-        //         );
-        // })
         .then(converted => converted.reduce(merge, {}))
         .then(data => ({...data, ...seekPagesRepeatables(data)}))
-        .then(book => {
-            console.warn('after', '@@@@@@', book);
-            resolve({book});
-        });
+        .then(book => resolve({book}));
     });
 };
 
