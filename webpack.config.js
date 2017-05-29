@@ -1,20 +1,40 @@
+var path = require('path');
 var webpack = require('webpack');
+var BrowserSyncPlugin = require('browser-sync-webpack-plugin');
 
 module.exports = {
-    entry: ['./src/parser.js'],
+    entry: {
+        index: path.resolve(__dirname, 'src/parser.js'),
+        client: path.resolve(__dirname, 'src/client.js')
+    },
     output: {
-        path: './dist',
-        filename: 'parser.js'
+        path: path.resolve('dist'),
+        filename: '[name].js',
+        chunkFilename: '[name].js'
     },
     module: {
-        loaders: [{
+        loaders: [
+            {
                 "test": /\.js?$/,
-                "loader": "babel"
+                "include": [
+                    path.resolve(__dirname, "src")
+                ],
+                "loader": "babel-loader",
             },
             {
-                test: /\.json$/,
-                loader: "json-loader"
+                "test": /\.json?$/,
+                "loader": "json-loader",
             }
         ]
-    }
+    },
+    devtool: 'source-map',
+    plugins: [
+        new BrowserSyncPlugin({
+            host: 'localhost',
+            port: 3000,
+            server: {
+            baseDir: ['./']
+            }
+        })
+    ]
 };

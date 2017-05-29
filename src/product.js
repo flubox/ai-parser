@@ -1,4 +1,4 @@
-import {merge} from './helper';
+import {isDef, merge} from './helper';
 
 export const designAsBookSelectors = [
     '#spine',
@@ -14,10 +14,18 @@ export const checkDesignAsBook = svg => {
 };
 
 export const getProductDeclaration = json => {
-    if (json) {
-        if (json.attributes && json.attributes.id && json.attributes.id.indexOf('design:') === 0) {
-            return json.attributes.id.split(':')[1];
-        } else if (json.elements && json.elements.length === 1) {
+    if (isDef(json)) {
+        if (isDef(json.attributes)) {
+            if (isDef(json.attributes.id)) {
+                if (json.attributes.id.indexOf('design:') === 0) {
+                    return json.attributes.id.split(':')[1];
+                } else {
+                    return json.attributes.id.split(':')[0];
+                }
+            } else if (isDef(json.elements) && json.elements.length === 1) {
+                return getProductDeclaration(json.elements[0]);
+            }
+        } else if (isDef(json.elements) && json.elements.length === 1) {
             return getProductDeclaration(json.elements[0]);
         }
     }
