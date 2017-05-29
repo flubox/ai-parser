@@ -26,7 +26,7 @@ export const resolveAperture = options => data => {
     }
     return data;
 };
-
+ 
 export const resolveRect = options => data => {
     const spineWithOneLayer = onlyOneSurface(data) && data.type === 'spine' && data.elements[0].type === 'layer';
     const layerWithOneAperture = onlyOneSurface(data) && data.type === 'layer' && data.elements[0].type === 'aperture';
