@@ -5,12 +5,8 @@
   "main": "dist/parser.js",
   "author": "François Lunette",
   "scripts": {
-    "install": "npm run dist",
     "dist": "webpack",
-    "dev": "npm run dev:client && npm run dev:parser",
-    "cli": "node dist/cli.js",
-    "dev:parser": "webpack --watch",
-    "dev:client": "webpack --config webpack.config.client.js --watch",
+    "dev": "webpack --watch",
     "test": "./node_modules/.bin/ava --verbose",
     "test:auto": "./node_modules/.bin/ava --watch --verbose",
     "watch": "npm-watch"
@@ -57,7 +53,7 @@
     "npm-watch": "^0.1.8",
     "nyc": "^10.1.2",
     "sinon": "^1.17.7",
-    "webpack": "1.12.13",
+    "webpack": "^2.5.1",
     "webpack-dev-server": "1.14.1"
   },
   "ava": {
