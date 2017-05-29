@@ -21,8 +21,6 @@ export const shouldSkipGroup = data => hasSubGroup(data);
 
 export const popGroup = data => shouldSkipGroup(data) ? ({...data, elements: data.elements.map(e => helper.named('g')(e) ? e.elements : e).reduce(helper.concat, [])}) : data;
 
-export const needNewType = data => ['text', 'rect'].includes(data.name);
-
 export const zIndex = (data, z) => ({...data, z});
 
 export const parseLayout = options => json => {

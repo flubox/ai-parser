@@ -33,10 +33,6 @@ export const parseDesigns = svg => options => {
             return reject({error: 'no attributes found for top level group'})
         }
 
-        // const viewbox = getViewBox(json.elements[0]);
-        // const viewport = { width: window.innerWidth, height: window.innerHeight };
-        // options = {...options, viewbox, viewport};
-
         const {width, height} = helper.extractPhysicalSize(json.elements[0].attributes);
         const unit = helper.extractUnit(width || height);
         const symbols = helper.reduceByMerge(helper.extractSymbols(json).map(s => helper.indexUp(s.attributes.id)(s)));
