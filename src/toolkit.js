@@ -9,6 +9,8 @@ export const extractId = ({attributes}) => isDef(attributes) && isDef(attributes
 
 export const parseToolkit = options => svg => {
     const { filename, S3, hashFunction, hashMethod } = options;
+    const fn = hashFunction;
+    const method = hashMethod;
     return new Promise((resolve, reject) => {
         const json = JSON.parse(convert.xml2json(svg.outerHTML, {compact: false, spaces: 4})).elements[0];
         const id = extractId(json);
@@ -21,9 +23,9 @@ export const parseToolkit = options => svg => {
             new Promise((resolve, reject) => S3.upload(getSvgUploadOptions(urlThumbPath)(svg.outerHTML)).promise().then(getLocation).then(thumbUrl => resolve({ thumbUrl }))),
             Promise.resolve({ id: id ? id.replace(/[_]?default[_]?/, '') : filename }),
             Promise.resolve({useDefaultToolkit}),
-            Promise.resolve({ colors: getColorsFromRects(colorsGroup)({hashFunction, hashMethod}) }),
-            Promise.resolve({ fonts: getFontsFromGroups(fontsGroup)({hashFunction, hashMethod}) }),
-            new Promise((resolve, reject) => parseImagesFromSVG(filename)(svg)(S3)({hashFunction, hashMethod}).then(images => resolve({ images }))),
+            Promise.resolve({ colors: getColorsFromRects(colorsGroup)({fn, method}) }),
+            Promise.resolve({ fonts: getFontsFromGroups(fontsGroup)({fn, method}) }),
+            new Promise((resolve, reject) => parseImagesFromSVG(filename)(svg)(S3)({fn, hashMethod}).then(images => resolve({ images }))),
         ]).then(values => resolve({toolkit: values.reduce(merge, {})}));
     });
 };
