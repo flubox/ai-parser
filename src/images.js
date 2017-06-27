@@ -23,7 +23,6 @@ export const uploadSvg = filename => Body => S3 => S3.upload(getSvgUploadOptions
 
 export const uploadBase64 = filename => Body => S3 => {
     const headers = getBase64UploadOptions(filename)(Body);
-    console.info('headers', filename, headers);
     return S3.upload(headers);
 }
 
@@ -39,9 +38,7 @@ export const getSvgThumbnails = filename => image => S3 => uploadSvg(getS3Filepa
 
 export const extractBase64 = svg => svg.getAttribute('xlink:href');
 
-
-
-export const getBase64Images = filename => svg => S3 => {
+export const getBase64Images = filename => svg => S3 => ({hashFunction, hashMethod}) =>{
     return new Promise(resolve => {
         const originalFilename = filename;
         let {width, height} = svg;
@@ -51,6 +48,11 @@ export const getBase64Images = filename => svg => S3 => {
         width = width.baseVal.value;
         height = height.baseVal.value;
         const base64 = extractBase64(svg);
+        const hash = hashFunction ? {
+            method: hashMethod,
+            key: 'base64',
+            value: hashFunction(base64)
+        } : false;
         const mapping = [
             {url: 'urlThumb', scale: 0.25}, {url: 'urlScaled', scale: 0.5}, {url: 'urlFull', scale: 1}
         ].map(({url, scale}) => {
@@ -61,7 +63,6 @@ export const getBase64Images = filename => svg => S3 => {
         }).reduce((a, b) => a.concat(b), []);
 
         Promise.all(mapping.map(({base64, filename, height, image, scale, width}) => {
-            console.info(filename, height, width, base64);
                 return new Promise(resolve => {
                     let tmpImg = new Image();
                     tmpImg.onload = () => {
@@ -87,7 +88,7 @@ export const getBase64Images = filename => svg => S3 => {
                 urlScaled: values[1].Location,
                 urlFull: values[2].Location,
             };
-            resolve(result)
+            resolve(hash ? {...result, hash} : result)
         });
     });
 };
@@ -104,12 +105,10 @@ export const parseImagesFromSVG = filename => svg => S3 => ({fn, method}) => {
     const vectorialGroup = nodeList2Array(svg.querySelectorAll('#images g')) || [];
     const resolveWithHash = data => image => useHashFunction ? hashForImage({method, fn})(data) : data;
     const imagesGroup = bitmapGroup.concat(vectorialGroup);
-    imagesGroup.map(isSvgWithBase64);
     return Promise.all(imagesGroup.map(image => {
-        if (isSvgWithBase64(image)) {
-            const data = getBase64Images(filename)(image)(S3);
-            const result = useHashFunction ? hashForImage({method, fn})(data) : data;
-            return result;
+        const isBase64 = isSvgWithBase64(image);
+        if (isBase64) {
+            return getBase64Images(filename)(image)(S3)({hashFunction: fn, hashMethod: method});
         }
         return getSvgThumbnails(filename)(image)(S3).then(data => resolveWithHash(getSvgUrl({ id: getImageId(image), imageType: getImageType(image) })(data))(image))
     }));
