@@ -1,4 +1,4 @@
-import { capitalizeFirstLetter, getDeclaration, nodeList2Array } from './helper';
+import { capitalizeFirstLetter, getDeclaration, merge, nodeList2Array } from './helper';
 import convertCssColorNameToHex from 'convert-css-color-name-to-hex';
 
 export const getRgb = color => color.indexOf('#') === 0 ? color.replace(/#/g, '') : getRgb(convertCssColorNameToHex(color));
@@ -22,7 +22,7 @@ export const getColorTypeDeclaration = ({ id }) => {
 
 export const filterColorPrefix = color => color !== 'color';
 
-export const getColorsFromRects = rects => ({hashFunction, hashMethod}) => {
+export const getColorsFromRects = rects => ({hashFunction, method}) => {
     const useHashFunction = typeof hashFunction === 'function';
     return nodeList2Array(rects).map(rect => {
             const reduce = (a, b) => a.concat(b);
@@ -33,5 +33,14 @@ export const getColorsFromRects = rects => ({hashFunction, hashMethod}) => {
             return { colorType, rgb };
         })
         .reduce((a, b) => a.concat(b.colorType.length ? b.colorType.map(colorType => ({...b, colorType })) : b), [])
-        .map(color => useHashFunction ? { hashKeys: Object.keys(color).sort(), hashMethod, hash: hashFunction(JSON.stringify(color)), ...color } : color);
+        .map(
+            color => useHashFunction ? {
+                ...color,
+                hash: {
+                    keys: Object.keys(color).sort(),
+                    method,
+                    value: hashFunction(JSON.stringify(Object.keys(color).sort().reduce(merge, {})))
+                }
+            } : color
+        );
 };

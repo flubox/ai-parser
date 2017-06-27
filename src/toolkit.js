@@ -5,14 +5,14 @@ import { getColorsFromRects } from './colors';
 import { getFontsFromGroups } from './fonts';
 import { parseImagesFromSVG } from './images';
 
-export const extractId = ({attributes}) => isDef(attributes) && isDef(attributes.id) && attributes.id.match(/^toolkit_(.+)/)[1];
+export const extractId = ({attributes}) => isDef(attributes) && isDef(attributes.id) && attributes.id.match(/^toolkit_(?:default_)(.+)/)[1];
 
 export const parseToolkit = options => svg => {
     const { filename, S3, hashFunction, hashMethod } = options;
     return new Promise((resolve, reject) => {
         const json = JSON.parse(convert.xml2json(svg.outerHTML, {compact: false, spaces: 4})).elements[0];
         const id = extractId(json);
-        const useDefaultToolkit = !!id.match(/default/);
+        const useDefaultToolkit = !!json.attributes.id.match(/(?:default_)/);
         const colorsGroup = nodeList2Array(svg.querySelectorAll('#colors rect'));
         const fontsGroup = nodeList2Array(svg.querySelectorAll('#fonts text'));
         const urlThumbPath = `${filename}/${filename.replace('.svg', '.thumb.svg')}`;
