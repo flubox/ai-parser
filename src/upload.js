@@ -9,3 +9,5 @@ export const getLocation = data => data.Location;
 export const getUploadOptions = f => Body => ({ Key: mkUrl(f), Body, Bucket, ACL });
 
 export const getSvgUploadOptions = f => Body => ({...getUploadOptions(f)(Body), ContentType: 'image/svg+xml' });
+
+export const getBase64UploadOptions = f => Body => ({...getUploadOptions(f)(Body), ContentEncoding: 'base64', ContentType: 'image/png'});
