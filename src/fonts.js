@@ -28,8 +28,8 @@ export const getFontsFromGroups = texts => ({fn, method}) => {
             ...font,
             hash: {
                 keys: Object.keys(font).sort(),
-                method,
-                value: fn(JSON.stringify(Object.keys(font).sort().reduce(merge, {})))
+                value: fn(JSON.stringify(Object.keys(font).sort().reduce(merge, {}))),
+                method
             }
         } : font
     );
