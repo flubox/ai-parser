@@ -38,8 +38,8 @@ export const getColorsFromRects = rects => ({fn, method}) => {
                 ...color,
                 hash: {
                     keys: Object.keys(color).sort(),
-                    method,
-                    value: fn(JSON.stringify(Object.keys(color).sort().reduce(merge, {})))
+                    value: fn(JSON.stringify(Object.keys(color).sort().reduce(merge, {}))),
+                    method
                 }
             } : color
         );

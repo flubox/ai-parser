@@ -25,7 +25,7 @@ export const parseToolkit = options => svg => {
             Promise.resolve({useDefaultToolkit}),
             Promise.resolve({ colors: getColorsFromRects(colorsGroup)({fn, method}) }),
             Promise.resolve({ fonts: getFontsFromGroups(fontsGroup)({fn, method}) }),
-            new Promise((resolve, reject) => parseImagesFromSVG(filename)(svg)(S3)({fn, hashMethod}).then(images => resolve({ images }))),
+            new Promise((resolve, reject) => parseImagesFromSVG(filename)(svg)(S3)({fn, method}).then(images => resolve({ images }))),
         ]).then(values => resolve({toolkit: values.reduce(merge, {})}));
     });
 };

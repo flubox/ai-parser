@@ -38,7 +38,7 @@ export const getSvgThumbnails = filename => image => S3 => uploadSvg(getS3Filepa
 
 export const extractBase64 = svg => svg.getAttribute('xlink:href');
 
-export const getBase64Images = filename => svg => S3 => ({hashFunction, hashMethod}) =>{
+export const getBase64Images = filename => svg => S3 => ({fn, method}) =>{
     return new Promise(resolve => {
         const originalFilename = filename;
         let {width, height} = svg;
@@ -48,10 +48,10 @@ export const getBase64Images = filename => svg => S3 => ({hashFunction, hashMeth
         width = width.baseVal.value;
         height = height.baseVal.value;
         const base64 = extractBase64(svg);
-        const hash = hashFunction ? {
-            method: hashMethod,
-            key: 'base64',
-            value: hashFunction(base64)
+        const hash = fn ? {
+            key: ['base64'],
+            value: fn(base64),
+            method
         } : false;
         const mapping = [
             {url: 'urlThumb', scale: 0.25}, {url: 'urlScaled', scale: 0.5}, {url: 'urlFull', scale: 1}
@@ -103,12 +103,12 @@ export const parseImagesFromSVG = filename => svg => S3 => ({fn, method}) => {
     const useHashFunction = typeof fn === 'function';
     const bitmapGroup = nodeList2Array(svg.querySelectorAll('#images image')) || [];
     const vectorialGroup = nodeList2Array(svg.querySelectorAll('#images g')) || [];
-    const resolveWithHash = data => image => useHashFunction ? hashForImage({method, fn})(data) : data;
+    const resolveWithHash = data => image =>  useHashFunction ? {...data, hash: {keys: [], value: fn(image), method}} : data;
     const imagesGroup = bitmapGroup.concat(vectorialGroup);
     return Promise.all(imagesGroup.map(image => {
         const isBase64 = isSvgWithBase64(image);
         if (isBase64) {
-            return getBase64Images(filename)(image)(S3)({hashFunction: fn, hashMethod: method});
+            return getBase64Images(filename)(image)(S3)({fn, method});
         }
         return getSvgThumbnails(filename)(image)(S3).then(data => resolveWithHash(getSvgUrl({ id: getImageId(image), imageType: getImageType(image) })(data))(image))
     }));
