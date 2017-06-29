@@ -30,7 +30,7 @@ export const getExtension = filename => filename.split('.').reverse()[0];
 
 export const sameValue = keys => value => keys.reduce((all, key) => ({[key]: value}), {});
 
-export const getSvgUrl = previous => data => ({...previous, ...sameValue(['urlSvg', 'urlThumb', 'urlScaled', 'urlFull'])(getLocation(data)) });
+export const getSvgUrl = previous => data => ({...previous, urlSvg: data.Location, urlFull: data.Location});
 
 export const getS3Filepath = filename => image => image && image.id ? `${filename}/${image.id.match(/([a-z0-9])*/gi).join('_')}.svg` : filename;
 
