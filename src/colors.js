@@ -26,11 +26,13 @@ export const getColorsFromRects = rects => ({fn, method}) => {
     const useHashFunction = typeof fn === 'function';
     return nodeList2Array(rects).map(rect => {
             const reduce = (a, b) => a.concat(b);
-            const colorType = getColorTypeDeclaration(rect).filter(a => a.length).map(a => {
+            const colorDeclaration = getColorTypeDeclaration(rect).filter(a => a.length).map(a => {
                 return a.toLowerCase() === 'coverbackground' ? 'CoverBackground' : capitalizeFirstLetter(a);
             });
+            const colorType = colorDeclaration.filter(k => k.toLowerCase() !== 'default');
             const rgb = getRgb(getRectFillColor(rect));
-            return { colorType, rgb };
+            const defaultColor = colorDeclaration.filter(k => k.toLowerCase() === 'default').length > 0;
+            return { colorType, rgb, defaultColor };
         })
         .reduce((a, b) => a.concat(b.colorType.length ? b.colorType.map(colorType => ({...b, colorType })) : b), [])
         .map(
