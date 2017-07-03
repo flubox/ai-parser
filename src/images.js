@@ -108,7 +108,7 @@ export const parseImagesFromSVG = filename => svg => S3 => ({fn, method}) => {
     return Promise.all(imagesGroup.map(image => {
         const isBase64 = isSvgWithBase64(image);
         if (isBase64) {
-            return getBase64Images(filename)(image)(S3)({fn, method});
+            return getBase64Images(filename)(image)(S3)({fn, method}).then(data => ({then: resolve => resolve({...data, imageType: getImageType(image)})}));
         }
         return getSvgThumbnails(filename)(image)(S3).then(data => resolveWithHash(getSvgUrl({ id: getImageId(image), imageType: getImageType(image) })(data))(image))
     }));
