@@ -1,4 +1,5 @@
 import parser from './parser';
+import generateToolkitAsSvg from './generate';
 import s3config from '../s3.json';
 import md5 from 'blueimp-md5';
 AWS.config.update(s3config);
@@ -112,6 +113,12 @@ window.svgParserClient = domElement => endpoints => {
 
             parser(document.querySelector(`#${loaderId} svg`))(options).then(parsed => {
                 console.info('###', 'parsed', parsed);
+                console.info('generateToolkitAsSvg', generateToolkitAsSvg(parsed.toolkits[0]));
+                // let tmpEl = document.createElement('div');
+                // tmpEl.setAttribute('width', '100%');
+                // tmpEl.appendChild(generateToolkitAsSvg(parsed.toolkits[0]));
+                loader.appendChild(generateToolkitAsSvg(parsed.toolkits[0]));
+                // loader.appendChild(tmpEl);
                 const filterErrors = key => key !== 'error';
                 const filterEmpty = parsed => key => Array.isArray(parsed[key]) ? !!parsed[key].length : !!Object.keys(parsed[key]).length;
                 Object.keys(parsed).filter(filterErrors).filter(filterEmpty(parsed)).map(key => onParsed[key](parsed[key]));
