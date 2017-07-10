@@ -5,7 +5,10 @@ import { getColorsFromRects } from './colors';
 import { getFontsFromGroups } from './fonts';
 import { parseImagesFromSVG, makeSvg } from './images';
 
-export const extractId = ({attributes}) => isDef(attributes) && isDef(attributes.id) && attributes.id.match(/^toolkit_(?:default_)(.+)/)[1];
+export const extractId = ({attributes}) => {
+    const match = attributes.id.match(/^toolkit_(?:default_)(.+)/);
+    return isDef(attributes) && isDef(attributes.id) && match && match[1];
+}
 
 export const parseToolkit = options => svg => {
     console.info('parseToolkit', 'options', options);
