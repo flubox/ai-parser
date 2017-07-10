@@ -76,16 +76,12 @@ export const generateImagesAsSvg = ({images, colors}) => {
                         fetch(image.urlFull).then(response => {
                             response.text().then(data => {
                                 const extract = data.substr(data.indexOf('><')).replace('</svg>', '')
-                                // let tmp = document.createAttributeNS("http://www.w3.org/2000/svg", 'g');
-                                // const tmp = document.createRange().createContextualFragment(extract);
 
                                 var tagString = extract;
                                 var range = document.createRange();
                                 // make the parent of the first div in the document becomes the context node
                                 range.selectNode(document.getElementsByTagName("g").item(0));
                                 var documentFragment = range.createContextualFragment(tagString);
-
-
 
                                 documentFragment.id = `${image.id}:${image.imageType.toLowerCase()}`;
                                 // documentFragment.setAttribute('id', `${image.id}:${image.imageType.toLowerCase()}`);
