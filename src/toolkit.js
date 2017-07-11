@@ -17,8 +17,8 @@ export const parseToolkit = options => svg => {
     const method = hashMethod;
     return new Promise((resolve, reject) => {
         const json = JSON.parse(convert.xml2json(svg.outerHTML, {compact: false, spaces: 4})).elements[0];
-        let id = extractId(json);
-        id = id ? id.replace(/[_]?default[_]?/, '') : filename;
+        let toolkitId = extractId(json);
+        toolkitId = toolkitId ? toolkitId.replace(/[_]?default[_]?/, '') : filename;
         const useDefaultToolkit = !!json.attributes.id.match(/(?:default_)/);
         const colorsGroup = nodeList2Array(svg.querySelectorAll('#colors rect'));
         const fontsGroup = nodeList2Array(svg.querySelectorAll('#fonts text'));
@@ -30,13 +30,13 @@ export const parseToolkit = options => svg => {
             Promise.resolve({useDefaultToolkit}),
             Promise.resolve({ colors: getColorsFromRects(colorsGroup)({fn, method}) }),
             Promise.resolve({ fonts: getFontsFromGroups(fontsGroup)({fn, method}) }),
-            new Promise((resolve, reject) => parseImagesFromSVG(filename)(svg)(S3)({fn, method}).then(images => resolve({ images }))),
+            new Promise((resolve, reject) => parseImagesFromSVG(toolkitId, filename)(svg)(S3)({fn, method}).then(images => resolve({ images }))),
         ]).then(values => {
             // console.info('svg.outerHTML', svg.outerHTML);
             S3.upload(getSvgUploadOptions(urlThumbPath)(svg.outerHTML)).promise().then(getLocation)
             .then(thumbUrl => {
                 console.info('thumbUrl', thumbUrl);
-                resolve({toolkit: values.reduce(merge, {id, thumbUrl})})
+                resolve({toolkit: values.reduce(merge, {id: toolkitId, thumbUrl})})
             })
             
             // .then(thumbUrl => resolve({ thumbUrl }))
