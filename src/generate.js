@@ -48,7 +48,7 @@ export const generateColorsAsSvg = ({colors, fonts}) => {
     return tmpG;
 };
 
-export const generateImagesAsSvg = ({images, fonts, colors}) => {
+export const generateImagesAsSvg = ({images, fonts, colors}, useUrlForImages) => {
     const tmpG = document.createElementNS("http://www.w3.org/2000/svg", 'g');
     tmpG.setAttribute('id', 'images');
     return new Promise(resolve => {
@@ -57,7 +57,7 @@ export const generateImagesAsSvg = ({images, fonts, colors}) => {
         const margin = 4;
         let x = -1;
         let y = 0;
-        let xOffset = -100;
+        let xOffset = useUrlForImages ? 0 : -100;
         let yOffset = (fonts.length * 24) + (colors.length * 40)
         images = images.sort();
 
@@ -90,26 +90,39 @@ export const generateImagesAsSvg = ({images, fonts, colors}) => {
                             });
                         });
                     } else {
-                        const tmpImg = new Image();
-                        tmpImg.crossOrigin = "anonymous";
-                        tmpImg.onload = () => {
+                        if (useUrlForImages) {
                             doImg();
-                            const xx = (x * ((tmpImg.width * 0.1) + margin)) + xOffset;
-                            const yy = yOffset + (y * ((tmpImg.height * 0.1) + margin));
-                            const tmpCanvas = document.createElement('canvas');
-                            tmpCanvas.width = tmpImg.width;
-                            tmpCanvas.height = tmpImg.height;
-                            const ctx = tmpCanvas.getContext('2d');
-                            ctx.drawImage(tmpImg, 0, 0);
+                            const xx = (x * (128 + margin)) + xOffset;
+                            const yy = yOffset + (y * (height + margin));
                             const tmp = document.createElementNS("http://www.w3.org/2000/svg", 'image');
                             tmp.setAttribute('id', `${image.id}:${image.imageType.toLowerCase()}`);
-                            tmp.setAttribute('width', `${tmpImg.width}`);
-                            tmp.setAttribute('height', `${tmpImg.height}`);
+                            tmp.setAttribute('width', '1080px');
+                            tmp.setAttribute('height', '1080px');
                             tmp.setAttribute('transform', `translate(${xx} ${yy}) scale(0.1 0.1)`);
-                            tmp.setAttributeNS('http://www.w3.org/1999/xlink', 'xlink:href', tmpCanvas.toDataURL());
+                            tmp.setAttributeNS('http://www.w3.org/1999/xlink', 'xlink:href', image.urlFull);
                             resolve2(tmp);
-                        };
-                        tmpImg.src = image.urlFull;
+                        } else {
+                            const tmpImg = new Image();
+                            tmpImg.crossOrigin = "anonymous";
+                            tmpImg.onload = () => {
+                                doImg();
+                                const xx = (x * ((tmpImg.width * 0.1) + margin)) + xOffset;
+                                const yy = yOffset + (y * ((tmpImg.height * 0.1) + margin));
+                                const tmpCanvas = document.createElement('canvas');
+                                tmpCanvas.width = tmpImg.width;
+                                tmpCanvas.height = tmpImg.height;
+                                const ctx = tmpCanvas.getContext('2d');
+                                ctx.drawImage(tmpImg, 0, 0);
+                                const tmp = document.createElementNS("http://www.w3.org/2000/svg", 'image');
+                                tmp.setAttribute('id', `${image.id}:${image.imageType.toLowerCase()}`);
+                                tmp.setAttribute('width', `${tmpImg.width}`);
+                                tmp.setAttribute('height', `${tmpImg.height}`);
+                                tmp.setAttribute('transform', `translate(${xx} ${yy}) scale(0.1 0.1)`);
+                                tmp.setAttributeNS('http://www.w3.org/1999/xlink', 'xlink:href', tmpCanvas.toDataURL());
+                                resolve2(tmp);
+                            };
+                            tmpImg.src = image.urlFull;
+                        }
                     }
                 });
             })
@@ -121,7 +134,7 @@ export const generateImagesAsSvg = ({images, fonts, colors}) => {
     });
 };
 
-export const generateToolkitAsSvg = toolkit => {
+export const generateToolkitAsSvg = useUrlForImages => toolkit => {
     let svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
     svg.setAttribute('id', 'toolkits');
     svg.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
@@ -149,7 +162,7 @@ export const generateToolkitAsSvg = toolkit => {
 
     elG.appendChild(generateFontsAsSvg({fonts}));
     elG.appendChild(generateColorsAsSvg({colors, fonts}));
-    generateImagesAsSvg({images, fonts, colors}).then(elG.appendChild.bind(elG));
+    generateImagesAsSvg({images, fonts, colors}, useUrlForImages).then(elG.appendChild.bind(elG));
 
     svg.appendChild(elG);
     return svg;
