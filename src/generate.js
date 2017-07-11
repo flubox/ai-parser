@@ -11,7 +11,7 @@ export const generateFontsAsSvg = ({fonts}) => {
         const tmp2 = document.createElementNS("http://www.w3.org/2000/svg", 'text');
         tmp2.setAttribute('font-size', 16);
         tmp2.setAttribute('font-family', `${font.displayName}, ${font.name}`)
-        tmp2.setAttribute('transform', `translate(${xOffset} ${i * yOffset})`);
+        tmp2.setAttribute('transform', `translate(${xOffset} ${(i + 1) * yOffset})`);
         tmp2.appendChild(tmp);
         tmpG.appendChild(tmp2);
     });
@@ -48,19 +48,20 @@ export const generateColorsAsSvg = ({colors, fonts}) => {
     return tmpG;
 };
 
-export const generateImagesAsSvg = ({images, colors}) => {
+export const generateImagesAsSvg = ({images, fonts, colors}) => {
     const tmpG = document.createElementNS("http://www.w3.org/2000/svg", 'g');
     tmpG.setAttribute('id', 'images');
     return new Promise(resolve => {
-        const xOffset = 16;
-        const yOffset = (colors.length * 32) + 32;
         const width = 32;
         const height = 32;
         const margin = 4;
         let x = -1;
         let y = 0;
+        let xOffset = -100;
+        let yOffset = (fonts.length * 24) + (colors.length * 40)
         images = images.sort();
-        const inc = () => {
+
+        const doImg = () => {
             if (x !== 0 && x % 3 === 0) {
                 x = 0;
                 y++;
@@ -70,46 +71,43 @@ export const generateImagesAsSvg = ({images, colors}) => {
         };
 
         Promise.all(
-            images.map(image => {
+            images.map((image, i) => {
                 return new Promise(resolve2 => {
                     if (image.imageType === 'Clipart') {
                         fetch(image.urlFull).then(response => {
                             response.text().then(data => {
+                                doImg();
+                                const xx = (x * (width + margin)) + xOffset;
+                                const yy = yOffset + (y * (height + margin));
                                 const extract = data.substr(data.indexOf('><')).replace('</svg>', '')
-
                                 var tagString = extract;
                                 var range = document.createRange();
-                                // make the parent of the first div in the document becomes the context node
                                 range.selectNode(document.getElementsByTagName("g").item(0));
                                 var documentFragment = range.createContextualFragment(tagString);
-
                                 documentFragment.id = `${image.id}:${image.imageType.toLowerCase()}`;
-                                // documentFragment.setAttribute('id', `${image.id}:${image.imageType.toLowerCase()}`);
-                                // tmp.setAttribute('transform', `translate(${(x * (width + margin)) + xOffset} ${yOffset + (y * (height + margin))}) scale(0.1 0.1)`);
-                                // tmp.setAttribute('width', `${width}px`);
-                                // tmp.setAttribute('height', `${height}px`);
+                                documentFragment.transform = `translate(${xx} ${yy}) scale(0.1 0.1)`;
                                 resolve2(documentFragment);
-                                inc();
                             });
                         });
                     } else {
                         const tmpImg = new Image();
                         tmpImg.crossOrigin = "anonymous";
                         tmpImg.onload = () => {
+                            doImg();
+                            const xx = (x * ((tmpImg.width * 0.1) + margin)) + xOffset;
+                            const yy = yOffset + (y * ((tmpImg.height * 0.1) + margin));
                             const tmpCanvas = document.createElement('canvas');
                             tmpCanvas.width = tmpImg.width;
                             tmpCanvas.height = tmpImg.height;
                             const ctx = tmpCanvas.getContext('2d');
                             ctx.drawImage(tmpImg, 0, 0);
-                            const tmp = document.createElementNS("http://www.w3.org/2000/svg", 'img');
+                            const tmp = document.createElementNS("http://www.w3.org/2000/svg", 'image');
                             tmp.setAttribute('id', `${image.id}:${image.imageType.toLowerCase()}`);
-                            // tmp.setAttribute('transform', `translate(${(x * (tmpImg.width + margin)) + xOffset} ${yOffset + (y * (tmpImg.height + margin))}) scale(0.1 0.1)`);
-                            tmp.setAttribute('transform', `scale(0.1 0.1)`);
                             tmp.setAttribute('width', `${tmpImg.width}`);
                             tmp.setAttribute('height', `${tmpImg.height}`);
-                            tmp.setAttribute('xlink:href', `${tmpCanvas.toDataURL()}`);
+                            tmp.setAttribute('transform', `translate(${xx} ${yy}) scale(0.1 0.1)`);
+                            tmp.setAttributeNS('http://www.w3.org/1999/xlink', 'xlink:href', tmpCanvas.toDataURL());
                             resolve2(tmp);
-                            inc();
                         };
                         tmpImg.src = image.urlFull;
                     }
@@ -129,8 +127,8 @@ export const generateToolkitAsSvg = toolkit => {
     svg.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
     svg.setAttribute('xmlns:xlink', 'http://www.w3.org/1999/xlink');
     svg.setAttribute('width', '2100mm');
-    svg.setAttribute('height', '2970mm');
-    svg.setAttribute('viewBox', '0 -105 210 297');
+    const t = (toolkit.fonts.length * 24) + (toolkit.colors.length * 16) + (toolkit.images.length * 1000);
+    svg.setAttribute('height', `${t}mm`);
     const toolkitSvgId = `toolkit_${toolkit.useDefaultToolkit ? 'default_' : ''}${toolkit.id}`;
     const {fonts, images} = toolkit;
     let colors = toolkit.colors.sort((a, b) => a.rgb < b.rgb ? -1 : a.rgb > b.rgb ? 1 : 0)
@@ -141,7 +139,6 @@ export const generateToolkitAsSvg = toolkit => {
         return arr[i + 1] && arr[i + 1].rgb === a.rgb ? all.concat([{...a, colorType: [a.colorType, arr[i + 1].colorType]}]) : all.concat([a]);
     }, [])
     .map(c => ({...c, colorType: Array.isArray(c.colorType) ? c.colorType.join(' ') : c.colorType}));
-    console.warn('colors', colors);
     
     const elTitle = document.createElementNS("http://www.w3.org/2000/svg", 'title');
     elTitle.innerHTML = toolkit.id;
@@ -152,7 +149,7 @@ export const generateToolkitAsSvg = toolkit => {
 
     elG.appendChild(generateFontsAsSvg({fonts}));
     elG.appendChild(generateColorsAsSvg({colors, fonts}));
-    generateImagesAsSvg({images, colors}).then(elG.appendChild.bind(elG));
+    generateImagesAsSvg({images, fonts, colors}).then(elG.appendChild.bind(elG));
 
     svg.appendChild(elG);
     return svg;
