@@ -22,7 +22,7 @@ export const parseToolkit = options => svg => {
         const useDefaultToolkit = !!json.attributes.id.match(/(?:default_)/);
         const colorsGroup = nodeList2Array(svg.querySelectorAll('#colors rect'));
         const fontsGroup = nodeList2Array(svg.querySelectorAll('#fonts text'));
-        const urlThumbPath = `${filename}/${filename.replace('.svg', '.thumb.svg')}`;
+        const urlThumbPath = `${toolkitId}/${toolkitId}.thumb.svg`;
 
         Promise.all([
             // new Promise((resolve, reject) => S3.upload(getSvgUploadOptions(urlThumbPath)(svg.outerHTML)).promise().then(getLocation).then(thumbUrl => resolve({ thumbUrl }))),
@@ -33,7 +33,7 @@ export const parseToolkit = options => svg => {
             new Promise((resolve, reject) => parseImagesFromSVG(toolkitId, filename)(svg)(S3)({fn, method}).then(images => resolve({ images }))),
         ]).then(values => {
             // console.info('svg.outerHTML', svg.outerHTML);
-            S3.upload(getSvgUploadOptions(urlThumbPath)(svg.outerHTML)).promise().then(getLocation)
+            S3.upload({ Key: urlThumbPath, Body: svg.outerHTML, Bucket, ACL , ContentType: 'image/svg+xml' }).promise().then(getLocation)
             .then(thumbUrl => {
                 console.info('thumbUrl', thumbUrl);
                 resolve({toolkit: values.reduce(merge, {id: toolkitId, thumbUrl})})
