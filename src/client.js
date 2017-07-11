@@ -113,11 +113,10 @@ window.svgParserClient = domElement => endpoints => {
 
             parser(document.querySelector(`#${loaderId} svg`))(options).then(parsed => {
                 console.info('###', 'parsed', parsed);
-                console.info('generateToolkitAsSvg', generateToolkitAsSvg(parsed.toolkits[0]));
                 // let tmpEl = document.createElement('div');
                 // tmpEl.setAttribute('width', '100%');
-                // tmpEl.appendChild(generateToolkitAsSvg(parsed.toolkits[0]));
-                loader.appendChild(generateToolkitAsSvg(parsed.toolkits[0]));
+                const generatedSVG = generateToolkitAsSvg(false)(parsed.toolkits[0]);
+                loader.appendChild(generatedSVG);
                 // loader.appendChild(tmpEl);
                 const filterErrors = key => key !== 'error';
                 const filterEmpty = parsed => key => Array.isArray(parsed[key]) ? !!parsed[key].length : !!Object.keys(parsed[key]).length;
