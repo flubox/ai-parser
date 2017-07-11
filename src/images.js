@@ -36,9 +36,9 @@ export const sameValue = keys => value => keys.reduce((all, key) => ({[key]: val
 
 export const getSvgUrl = previous => data => ({...previous, urlThumb: data.Location, urlScaled: data.Location, urlFull: data.Location, urlSvg: data.Location});
 
-export const getS3Filepath = toolkitId => image => image && image.id ? `${toolkitId}/${image.id.match(/([a-z0-9])*/gi).join('_')}.svg` : toolkitId;
+// export const getS3Filepath = toolkitId => image => image && image.id ? `${toolkitId}/${image.id.match(/([a-z0-9])*/gi).join('_')}.svg` : toolkitId;
 
-export const getSvgThumbnails = toolkitId => image => S3 => uploadSvg(getS3Filepath(toolkitId)(image))(svgAsString(makeSvg(image)))(S3).promise();
+export const getSvgThumbnails = toolkitId => image => S3 => uploadSvg(toolkitId, getImageId(image) + '.svg')(svgAsString(makeSvg(image)))(S3).promise();
 
 export const extractBase64 = svg => svg.getAttribute('xlink:href');
 
