@@ -1,4 +1,5 @@
 import parser from './parser';
+import generateToolkitAsSvg from './generate';
 import s3config from '../s3.json';
 import md5 from 'blueimp-md5';
 AWS.config.update(s3config);
@@ -105,69 +106,6 @@ window.svgParserClient = domElement => endpoints => {
                     containerEl.appendChild(panelEl);
                     document.querySelector(`#${infoId}`).appendChild(containerEl);
                 },
-                design: design => {
-                    const containerEl = document.createElement('div');
-                    containerEl.setAttribute('class', 'mui-container-fluid');
-                    const panelEl = document.createElement('div');
-                    panelEl.setAttribute('class', 'mui-panel');
-                    const titleEl = document.createElement('h2');
-                    titleEl.textContent = `designs`;
-                    panelEl.appendChild(titleEl);
-
-                    Object.keys(design).forEach(product => {
-                        console.info('####', 'product', product);
-                        const productElement = document.createElement('div');
-                        productElement.setAttribute('class', 'mui-panel');
-                        const productTitle = document.createElement('h3');
-                        productTitle.textContent = product;
-
-                        console.info('<<<', product, design[product].surfaces);
-
-                        // Object.keys(design[product].surfaces).forEach(k => design[product].surfaces[k]).map(console.info);
-                        for (const id in design[product].surfaces) {
-                            // console.info('.........', 'id', id, design[product].surfaces[id]);
-                            // toHtml(productElement)(design[product].surfaces[id]);
-                        }
-
-                        productElement.appendChild(productTitle);
-                        panelEl.appendChild(productElement);
-                    });
-
-                    containerEl.appendChild(panelEl);
-                    document.querySelector(`#${infoId}`).appendChild(containerEl);
-                },
-                designs: design => {
-                    console.info('<<<', 'designs', designs);
-                    // const containerEl = document.createElement('div');
-                    // containerEl.setAttribute('class', 'mui-container-fluid');
-                    // const panelEl = document.createElement('div');
-                    // panelEl.setAttribute('class', 'mui-panel');
-                    // const titleEl = document.createElement('h2');
-                    // titleEl.textContent = `designs`;
-                    // panelEl.appendChild(titleEl);
-
-                    // Object.keys(design).forEach(product => {
-                    //     console.info('####', 'product', product);
-                    //     const productElement = document.createElement('div');
-                    //     productElement.setAttribute('class', 'mui-panel');
-                    //     const productTitle = document.createElement('h3');
-                    //     productTitle.textContent = product;
-
-                    //     console.info('<<<', product, design[product].surfaces);
-
-                    //     // Object.keys(design[product].surfaces).forEach(k => design[product].surfaces[k]).map(console.info);
-                    //     for (const id in design[product].surfaces) {
-                    //         // console.info('.........', 'id', id, design[product].surfaces[id]);
-                    //         // toHtml(productElement)(design[product].surfaces[id]);
-                    //     }
-
-                    //     productElement.appendChild(productTitle);
-                    //     panelEl.appendChild(productElement);
-                    // });
-
-                    // containerEl.appendChild(panelEl);
-                    // document.querySelector(`#${infoId}`).appendChild(containerEl);
-                },
                 errors: error => {
                     console.error(error);
                 }
@@ -175,6 +113,12 @@ window.svgParserClient = domElement => endpoints => {
 
             parser(document.querySelector(`#${loaderId} svg`))(options).then(parsed => {
                 console.info('###', 'parsed', parsed);
+                console.info('generateToolkitAsSvg', generateToolkitAsSvg(parsed.toolkits[0]));
+                // let tmpEl = document.createElement('div');
+                // tmpEl.setAttribute('width', '100%');
+                // tmpEl.appendChild(generateToolkitAsSvg(parsed.toolkits[0]));
+                loader.appendChild(generateToolkitAsSvg(parsed.toolkits[0]));
+                // loader.appendChild(tmpEl);
                 const filterErrors = key => key !== 'error';
                 const filterEmpty = parsed => key => Array.isArray(parsed[key]) ? !!parsed[key].length : !!Object.keys(parsed[key]).length;
                 Object.keys(parsed).filter(filterErrors).filter(filterEmpty(parsed)).map(key => onParsed[key](parsed[key]));
