@@ -79,10 +79,9 @@ export const generateImagesAsSvg = ({images, fonts, colors}, useUrlForImages) =>
                                 doImg();
                                 const xx = (x * (width + margin)) + xOffset;
                                 const yy = yOffset + (y * (height + margin));
-                                const extract = data.substr(data.indexOf('><')).replace('</svg>', '')
+                                const extract = data.substr(data.indexOf('><') + 1).replace('</svg>', '')
                                 var tagString = extract;
                                 var range = document.createRange();
-                                range.selectNode(document.getElementsByTagName("g").item(0));
                                 var documentFragment = range.createContextualFragment(tagString);
                                 documentFragment.id = `${image.id}:${image.imageType.toLowerCase()}`;
                                 documentFragment.transform = `translate(${xx} ${yy}) scale(0.1 0.1)`;
