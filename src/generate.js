@@ -138,9 +138,11 @@ export const generateToolkitAsSvg = useUrlForImages => toolkit => {
     svg.setAttribute('id', 'toolkits');
     svg.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
     svg.setAttribute('xmlns:xlink', 'http://www.w3.org/1999/xlink');
-    svg.setAttribute('width', '2100mm');
-    const t = (toolkit.fonts.length * 24) + (toolkit.colors.length * 16) + (toolkit.images.length * 1000);
-    svg.setAttribute('height', `${t}mm`);
+    const w = Math.round(toolkit.images.length / 2) * 150;
+    svg.setAttribute('width', `${w}mm`);
+    const h = (toolkit.fonts.length * 24) + (toolkit.colors.length * 16) + (toolkit.images.length * 100);
+    svg.setAttribute('height', `${h}mm`);
+    svg.setAttribute('viewBox', `0 0 ${w} ${h}`);
     const toolkitSvgId = `toolkit_${toolkit.useDefaultToolkit ? 'default_' : ''}${toolkit.id}`;
     const {fonts, images} = toolkit;
     let colors = toolkit.colors.sort((a, b) => a.rgb < b.rgb ? -1 : a.rgb > b.rgb ? 1 : 0)
@@ -151,7 +153,7 @@ export const generateToolkitAsSvg = useUrlForImages => toolkit => {
         return arr[i + 1] && arr[i + 1].rgb === a.rgb ? all.concat([{...a, colorType: [a.colorType, arr[i + 1].colorType]}]) : all.concat([a]);
     }, [])
     .map(c => ({...c, colorType: Array.isArray(c.colorType) ? c.colorType.join(' ') : c.colorType}));
-    
+
     const elTitle = document.createElementNS("http://www.w3.org/2000/svg", 'title');
     elTitle.innerHTML = toolkit.id;
     svg.appendChild(elTitle);
