@@ -42,7 +42,7 @@ export const generateColorsAsSvg = ({colors, fonts}) => {
         tmpRect.setAttribute('y', `${yOffset + (y * (height + margin))}px`);
         tmpRect.setAttribute('width', `${width}px`);
         tmpRect.setAttribute('height', `${height}px`);
-        tmpRect.setAttribute('fill', `#${rgb}`);
+        tmpRect.setAttribute('fill', `${rgb.includes('#') ? rgb : `#${rgb}`}`);
         tmpG.appendChild(tmpRect);
     });
     return tmpG;
@@ -58,7 +58,7 @@ export const generateImagesAsSvg = ({images, fonts, colors}, useUrlForImages) =>
         let x = -1;
         let y = 0;
         let xOffset = useUrlForImages ? 0 : -100;
-        let yOffset = (fonts.length * 24) + (colors.length * 40)
+        let yOffset = (fonts.length * 24) + (colors.length * 64)
         images = images.sort();
 
         const doImg = () => {
@@ -113,7 +113,8 @@ export const generateImagesAsSvg = ({images, fonts, colors}, useUrlForImages) =>
                                 const ctx = tmpCanvas.getContext('2d');
                                 ctx.drawImage(tmpImg, 0, 0);
                                 const tmp = document.createElementNS("http://www.w3.org/2000/svg", 'image');
-                                tmp.setAttribute('id', `${image.id}:${image.imageType.toLowerCase()}`);
+                                const id = image.id && image.imageType && `${image.id}:${image.imageType.toLowerCase()}`;
+                                id && tmp.setAttribute('id', id);
                                 tmp.setAttribute('width', `${tmpImg.width}`);
                                 tmp.setAttribute('height', `${tmpImg.height}`);
                                 tmp.setAttribute('transform', `translate(${xx} ${yy}) scale(0.1 0.1)`);
