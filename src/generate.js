@@ -118,7 +118,7 @@ export const generateImagesAsSvg = ({images, fonts, colors}, useUrlForImages) =>
                                 tmp.setAttribute('width', `${tmpImg.width}`);
                                 tmp.setAttribute('height', `${tmpImg.height}`);
                                 tmp.setAttribute('transform', `translate(${xx} ${yy}) scale(0.1 0.1)`);
-                                tmp.setAttributeNS('http://www.w3.org/1999/xlink', 'xlink:href', tmpCanvas.toDataURL());
+                                tmp.setAttributeNS('http://www.w3.org/1999/xlink', 'xlink:href', tmpCanvas.toDataURL('image/png'));
                                 resolve2(tmp);
                             };
                             tmpImg.src = image.urlFull;
